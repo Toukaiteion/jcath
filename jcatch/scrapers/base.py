@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from ..core.models import MovieMetadata
+from jcatch.core.models import MovieMetadata
 
 
 class BaseScraper(ABC):

@@ -4,9 +4,9 @@ This is a placeholder showing how to implement a concrete scraper.
 You will need to implement the actual scraping logic based on the target website.
 """
 
-from ..scrapers.base import BaseScraper
-from ..core.models import MovieMetadata
-from ..utils import extract_number_from_path, download_image
+from jcatch.scrapers.base import BaseScraper
+from jcatch.core.models import MovieMetadata
+from jcatch.utils import extract_number_from_path, download_image
 
 
 class Jav321Scraper(BaseScraper):

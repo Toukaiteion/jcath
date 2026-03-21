@@ -1,32 +1,24 @@
 """Command-line interface for JCatch."""
 
+from typing import TYPE_CHECKING
+
 import click
 from pathlib import Path
 
-from .core import MediaProcessor
-from .scrapers.base import BaseScraper
+from jcatch.core import MediaProcessor
+from jcatch.scrapers import JavBusScraper
+
+if TYPE_CHECKING:
+    from jcatch.scrapers.base import BaseScraper
 
 
-def get_scraper() -> BaseScraper:
+def get_scraper() -> "BaseScraper":
     """Get the configured scraper instance.
 
-    TODO: Implement scraper selection logic.
-    You can:
-    1. Use a default scraper
-    2. Allow configuration via config file
-    3. Allow CLI option to specify scraper
-
-    For now, you'll need to import your concrete scraper implementation
-    and return it here.
+    Returns:
+        JavBusScraper instance
     """
-    # TODO: Import and return your actual scraper implementation
-    # from .scrapers.jav321 import Jav321Scraper
-    # return Jav321Scraper()
-
-    raise NotImplementedError(
-        "No scraper configured. Please implement get_scraper() "
-        "in jcatch/main.py with your concrete scraper implementation."
-    )
+    return JavBusScraper()
 
 
 @click.command()

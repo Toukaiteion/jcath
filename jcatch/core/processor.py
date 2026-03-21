@@ -3,10 +3,10 @@
 from pathlib import Path
 import shutil
 
-from ..scrapers.base import BaseScraper
-from .models import MovieMetadata
-from .nfo import generate_nfo
-from ..utils import download_image
+from jcatch.scrapers.base import BaseScraper
+from jcatch.core.models import MovieMetadata
+from jcatch.core.nfo import generate_nfo
+from jcatch.utils import download_image
 
 
 class MediaProcessor:
