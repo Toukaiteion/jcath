@@ -1,0 +1,25 @@
+[project]
+name = "jcatch"
+version = "0.1.0"
+description = "JAV video metadata fetcher and organizer"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0.0",
+    "requests>=2.31.0",
+    "click>=8.1.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.0.0",
+]
+
+[project.scripts]
+jcatch = "jcatch.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
