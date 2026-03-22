@@ -19,7 +19,6 @@ from bs4 import BeautifulSoup
 
 from jcatch.scrapers.base import BaseScraper
 from jcatch.core.models import MovieMetadata, Actor
-from jcatch.utils import download_image
 
 
 class JavBusScraper(BaseScraper):
@@ -29,6 +28,7 @@ class JavBusScraper(BaseScraper):
 
     def __init__(self):
         """Initialize scraper with headless browser."""
+        self.current_website = ""
         self.driver = self._init_driver()
 
     def _init_driver(self):
@@ -38,6 +38,8 @@ class JavBusScraper(BaseScraper):
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        options.add_argument(f"user-agent={user_agent}")
 
         # Load .env file
         load_dotenv()
@@ -147,6 +149,9 @@ class JavBusScraper(BaseScraper):
             fanart_url = self._parse_fanart_url(soup)
             extrafanart_urls = self._parse_extrafanart_urls(soup)
 
+            # Save website URL for referer header
+            self.current_website = url
+
             return MovieMetadata(
                 num=num,
                 title=title,
@@ -167,13 +172,27 @@ class JavBusScraper(BaseScraper):
             raise Exception(f"Failed to fetch metadata for {number}: {e}")
 
     def download_image(self, url: str, save_path: str) -> None:
-        """Download and save an image.
+        """Download and save an image with referer header for JavBus.
 
         Args:
             url: URL of image
             save_path: File path where image should be saved
         """
-        download_image(url, save_path)
+        import requests
+
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            headers = {}
+            if self.current_website:
+                headers["referer"] = self.current_website
+            headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+            response = requests.get(url, headers=headers, timeout=30)
+            response.raise_for_status()
+            save_path.write_bytes(response.content)
+        except Exception as e:
+            raise Exception(f"Failed to download {url}: {e}")
 
     # Parsing methods
 

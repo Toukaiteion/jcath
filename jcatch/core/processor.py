@@ -6,7 +6,6 @@ import shutil
 from jcatch.scrapers.base import BaseScraper
 from jcatch.core.models import MovieMetadata
 from jcatch.core.nfo import generate_nfo
-from jcatch.utils import download_image
 
 
 class MediaProcessor:
@@ -82,13 +81,13 @@ class MediaProcessor:
         """
         # Main images
         if metadata.poster_url:
-            download_image(metadata.poster_url, output_dir / f"{number}-poster.jpg")
+            self.scraper.download_image(metadata.poster_url, str(output_dir / f"{number}-poster.jpg"))
 
         if metadata.thumb_url:
-            download_image(metadata.thumb_url, output_dir / f"{number}-thumb.jpg")
+            self.scraper.download_image(metadata.thumb_url, str(output_dir / f"{number}-thumb.jpg"))
 
         if metadata.fanart_url:
-            download_image(metadata.fanart_url, output_dir / f"{number}-fanart.jpg")
+            self.scraper.download_image(metadata.fanart_url, str(output_dir / f"{number}-fanart.jpg"))
 
         # Extra fanart screenshots
         if metadata.extrafanart_urls:
@@ -96,7 +95,7 @@ class MediaProcessor:
             extra_dir.mkdir(exist_ok=True)
 
             for i, url in enumerate(metadata.extrafanart_urls, start=1):
-                download_image(url, extra_dir / f"extrafanart-{i}.jpg")
+                self.scraper.download_image(url, str(extra_dir / f"extrafanart-{i}.jpg"))
 
     def _generate_nfo(self, metadata: MovieMetadata, output_dir: Path, number: str) -> None:
         """Generate NFO file.
