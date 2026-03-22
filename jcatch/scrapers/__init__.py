@@ -3,6 +3,7 @@
 from jcatch.scrapers.base import BaseScraper
 from jcatch.scrapers.jav321 import Jav321Scraper
 from jcatch.scrapers.javbus import JavBusScraper
+from jcatch.scrapers.javwine import JavWineScraper
 from jcatch.scrapers.decorators import (
     ScraperDecorator,
     FanartDecorator,
@@ -13,6 +14,7 @@ __all__ = [
     "BaseScraper",
     "Jav321Scraper",
     "JavBusScraper",
+    "JavWineScraper",
     "ScraperDecorator",
     "FanartDecorator",
     "PosterDecorator",

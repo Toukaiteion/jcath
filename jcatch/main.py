@@ -7,10 +7,8 @@ from pathlib import Path
 
 from jcatch.core import MediaProcessor
 from jcatch.scrapers import (
-    JavBusScraper,
-    Jav321Scraper,
+    JavBusScraper, PosterDecorator, JavWineScraper,
 )
-from jcatch.scrapers.decorators import FanartDecorator, PosterDecorator
 
 if TYPE_CHECKING:
     from jcatch.scrapers.base import BaseScraper
@@ -39,7 +37,9 @@ def get_scraper() -> "BaseScraper":
         Configured BaseScraper instance
     """
     # Default: use JavBus for everything
-    return JavBusScraper()
+    base = JavBusScraper()
+    with_poster = PosterDecorator(base, JavWineScraper())
+    return with_poster
 
 
 @click.command()
