@@ -24,13 +24,9 @@ class ScraperDecorator(BaseScraper):
         """Parse movie number from file path (delegated to wrapped)."""
         return self.wrapped.parse_number(filepath)
 
-    def fetch_metadata(self, number: str):
+    def fetch_metadata(self, number):
         """Fetch metadata (delegated to wrapped by default)."""
         return self.wrapped.fetch_metadata(number)
-
-    def download_image(self, url: str, save_path: str) -> None:
-        """Download image (delegated to wrapped by default)."""
-        return self.wrapped.download_image(url, save_path)
 
     def __getattr__(self, name):
         """Delegate any other attributes to wrapped scraper."""

@@ -6,7 +6,7 @@ You will need to implement the actual scraping logic based on the target website
 
 from jcatch.scrapers.base import BaseScraper
 from jcatch.core.models import MovieMetadata
-from jcatch.utils import extract_number_from_path, download_image
+from jcatch.utils.file import extract_number_from_path
 
 
 class Jav321Scraper(BaseScraper):
@@ -37,7 +37,3 @@ class Jav321Scraper(BaseScraper):
             customrating="JP-18+",
             mpaa="JP-18+",
         )
-
-    def download_image(self, url: str, save_path: str) -> None:
-        """Download and save an image."""
-        download_image(url, save_path)

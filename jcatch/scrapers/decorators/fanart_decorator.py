@@ -1,11 +1,11 @@
 """Fanart decorator - override fanart/thumb images from another scraper."""
 
-from jcatch.core.models import MovieMetadata
-from jcatch.scrapers.decorator import ScraperDecorator
+from jcatch.core.models import ImageUrl, MovieMetadata
+from jcatch.scrapers.decorators.base_decorator import ScraperDecorator
 
 
 class FanartDecorator(ScraperDecorator):
-    """Decorator that replaces fanart/thumb URLs from a different scraper.
+    """Decorator that replaces fanart/thumb from a different scraper.
 
     Example:
         # Get metadata from JavBus, but fanart from DMM
@@ -28,31 +28,29 @@ class FanartDecorator(ScraperDecorator):
         metadata = self.wrapped.fetch_metadata(number)
 
         # Replace fanart URLs from fanart_scraper
-        # Fanart scraper should have _get_fanart_url(number) method
-        fanart_url = self._get_fanart_url(number)
-        if fanart_url:
-            metadata.fanart_url = fanart_url
-            metadata.thumb_url = fanart_url  # thumb usually same as fanart
+        fanart = self._get_fanart(number)
+        if fanart.url:
+            metadata.fanart = fanart
+            metadata.thumb = fanart
 
         return metadata
 
-    def _get_fanart_url(self, number: str) -> str:
+    def _get_fanart(self, number: str) -> ImageUrl:
         """Get fanart URL from the fanart scraper.
 
         Args:
             number: Movie number
 
         Returns:
-            Fanart image URL or empty string if not available
+            ImageUrl object with URL and headers
         """
-        # Try to call _get_fanart_url on the fanart_scraper
-        # If it doesn't exist, return empty string
-        if hasattr(self.fanart_scraper, '_get_fanart_url'):
-            return self.fanart_scraper._get_fanart_url(number)
+        # Try to call _get_fanart on the fanart_scraper
+        if hasattr(self.fanart_scraper, '_get_fanart'):
+            return self.fanart_scraper._get_fanart(number)
 
         # Alternative: fetch full metadata and extract fanart
         if hasattr(self.fanart_scraper, 'fetch_metadata'):
             metadata = self.fanart_scraper.fetch_metadata(number)
-            return metadata.fanart_url
+            return metadata.fanart
 
-        return ""
+        return ImageUrl(url="")

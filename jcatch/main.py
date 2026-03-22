@@ -9,9 +9,8 @@ from jcatch.core import MediaProcessor
 from jcatch.scrapers import (
     JavBusScraper,
     Jav321Scraper,
-    FanartDecorator,
-    PosterDecorator,
 )
+from jcatch.scrapers.decorators import FanartDecorator, PosterDecorator
 
 if TYPE_CHECKING:
     from jcatch.scrapers.base import BaseScraper

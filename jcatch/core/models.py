@@ -1,6 +1,5 @@
 """Data models for movie metadata."""
 
-from typing import Optional
 from pydantic import BaseModel, Field
 
 
@@ -8,6 +7,13 @@ class Actor(BaseModel):
     """Actor information."""
 
     name: str
+
+
+class ImageUrl(BaseModel):
+    """Image URL with associated download headers."""
+
+    url: str = Field(description="Image URL")
+    headers: dict[str, str] = Field(default_factory=dict, description="HTTP headers for download")
 
 
 class MovieMetadata(BaseModel):
@@ -36,10 +42,10 @@ class MovieMetadata(BaseModel):
     cover: str = Field(default="", description="Cover image URL")
     website: str = Field(default="", description="Website URL")
 
-    # Image URLs for downloading
-    fanart_url: str = Field(default="", description="Fanart image URL")
-    poster_url: str = Field(default="", description="Poster image URL")
-    thumb_url: str = Field(default="", description="Thumbnail image URL")
-    extrafanart_urls: list[str] = Field(
+    # Image URLs for downloading (with headers)
+    fanart: ImageUrl = Field(default_factory=ImageUrl, description="Fanart image")
+    poster: ImageUrl = Field(default_factory=ImageUrl, description="Poster image")
+    thumb: ImageUrl = Field(default_factory=ImageUrl, description="Thumbnail image")
+    extrafanart: list[ImageUrl] = Field(
         default_factory=list, description="Extra fanart/screenshot URLs"
     )

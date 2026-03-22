@@ -18,7 +18,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 
 from jcatch.scrapers.base import BaseScraper
-from jcatch.core.models import MovieMetadata, Actor
+from jcatch.core.models import MovieMetadata, Actor, ImageUrl
 
 
 class JavBusScraper(BaseScraper):
@@ -28,7 +28,6 @@ class JavBusScraper(BaseScraper):
 
     def __init__(self):
         """Initialize scraper with headless browser."""
-        self.current_website = ""
         self.driver = self._init_driver()
 
     def _init_driver(self):
@@ -149,8 +148,11 @@ class JavBusScraper(BaseScraper):
             fanart_url = self._parse_fanart_url(soup)
             extrafanart_urls = self._parse_extrafanart_urls(soup)
 
-            # Save website URL for referer header
-            self.current_website = url
+            # Build image headers with referer
+            headers = {
+                "referer": url,
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+            }
 
             return MovieMetadata(
                 num=num,
@@ -164,38 +166,15 @@ class JavBusScraper(BaseScraper):
                 label=label,
                 actors=actors,
                 genres=genres,
-                fanart_url=fanart_url,
-                thumb_url=fanart_url,  # Same as fanart_url
-                poster_url="",  # Not available from javbus
-                extrafanart_urls=extrafanart_urls,
+                fanart=ImageUrl(url=fanart_url, headers=headers),
+                thumb=ImageUrl(url=fanart_url, headers=headers),
+                poster=ImageUrl(url=""),
+                extrafanart=[ImageUrl(url=u, headers=headers) for u in extrafanart_urls],
                 website=url,
             )
 
         except Exception as e:
             raise Exception(f"Failed to fetch metadata for {number}: {e}")
-
-    def download_image(self, url: str, save_path: str) -> None:
-        """Download and save an image with referer header for JavBus.
-
-        Args:
-            url: URL of image
-            save_path: File path where image should be saved
-        """
-        import requests
-
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-
-        try:
-            headers = {}
-            if self.current_website:
-                headers["referer"] = self.current_website
-            headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
-            response = requests.get(url, headers=headers, timeout=30)
-            response.raise_for_status()
-            save_path.write_bytes(response.content)
-        except Exception as e:
-            raise Exception(f"Failed to download {url}: {e}")
 
     # Parsing methods
 

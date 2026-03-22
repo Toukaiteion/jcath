@@ -1,7 +1,7 @@
 """Poster decorator - override poster image from another scraper."""
 
-from jcatch.core.models import MovieMetadata
-from jcatch.scrapers.decorator import ScraperDecorator
+from jcatch.core.models import ImageUrl, MovieMetadata
+from jcatch.scrapers.decorators.base_decorator import ScraperDecorator
 
 
 class PosterDecorator(ScraperDecorator):
@@ -28,28 +28,28 @@ class PosterDecorator(ScraperDecorator):
         metadata = self.wrapped.fetch_metadata(number)
 
         # Replace poster URL from poster_scraper
-        poster_url = self._get_poster_url(number)
-        if poster_url:
-            metadata.poster_url = poster_url
+        poster = self._get_poster(number)
+        if poster.url:
+            metadata.poster = poster
 
         return metadata
 
-    def _get_poster_url(self, number: str) -> str:
+    def _get_poster(self, number: str) -> ImageUrl:
         """Get poster URL from the poster scraper.
 
         Args:
             number: Movie number
 
         Returns:
-            Poster image URL or empty string if not available
+            ImageUrl object with URL and headers
         """
-        # Try to call _get_poster_url on the poster_scraper
-        if hasattr(self.poster_scraper, '_get_poster_url'):
-            return self.poster_scraper._get_poster_url(number)
+        # Try to call _get_poster on the poster_scraper
+        if hasattr(self.poster_scraper, '_get_poster'):
+            return self.poster_scraper._get_poster(number)
 
         # Alternative: fetch full metadata and extract poster
         if hasattr(self.poster_scraper, 'fetch_metadata'):
             metadata = self.poster_scraper.fetch_metadata(number)
-            return metadata.poster_url
+            return metadata.poster
 
-        return ""
+        return ImageUrl(url="")

@@ -46,22 +46,3 @@ class BaseScraper(ABC):
             "FSDSS-549-「上司からここに来るように言われました」..."
         """
         pass
-
-    @abstractmethod
-    def download_image(self, url: str, save_path: str) -> None:
-        """Download and save an image.
-
-        Args:
-            url: URL of the image
-            save_path: File path where the image should be saved
-
-        Raises:
-            Exception: If download fails
-
-        Example:
-            >>> scraper.download_image(
-            ...     "https://example.com/image.jpg",
-            ...     "/output/FSDSS-549-poster.jpg"
-            ... )
-        """
-        pass
