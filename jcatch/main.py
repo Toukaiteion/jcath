@@ -6,7 +6,12 @@ import click
 from pathlib import Path
 
 from jcatch.core import MediaProcessor
-from jcatch.scrapers import JavBusScraper
+from jcatch.scrapers import (
+    JavBusScraper,
+    Jav321Scraper,
+    FanartDecorator,
+    PosterDecorator,
+)
 
 if TYPE_CHECKING:
     from jcatch.scrapers.base import BaseScraper
@@ -15,9 +20,26 @@ if TYPE_CHECKING:
 def get_scraper() -> "BaseScraper":
     """Get the configured scraper instance.
 
+    You can combine scrapers using decorators to get metadata from one source
+    and images from another.
+
+    Examples:
+        # Simple: use JavBus for everything
+        return JavBusScraper()
+
+        # Composite: metadata from JavBus, fanart from Jav321
+        base = JavBusScraper()
+        return FanartDecorator(base, Jav321Scraper())
+
+        # Multi-layer: metadata from JavBus, fanart from A, poster from B
+        base = JavBusScraper()
+        with_fanart = FanartDecorator(base, DMMScraper())
+        return PosterDecorator(with_fanart, Jav321Scraper())
+
     Returns:
-        JavBusScraper instance
+        Configured BaseScraper instance
     """
+    # Default: use JavBus for everything
     return JavBusScraper()
 
 
