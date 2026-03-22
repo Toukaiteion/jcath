@@ -4,6 +4,7 @@ from pathlib import Path
 import shutil
 
 from xml.etree import ElementTree as ET
+from PIL import Image
 
 from jcatch.scrapers.base import BaseScraper
 from jcatch.core.models import MovieMetadata
@@ -143,10 +144,6 @@ class MediaProcessor:
         if not extrafanart_dir.exists():
             missing.append("extrafanart目录")
 
-        poster_file = output_dir / f"{number}-poster.jpg"
-        if not poster_file.exists():
-            missing.append(f"{number}-poster.jpg")
-
         fanart_file = output_dir / f"{number}-fanart.jpg"
         if not fanart_file.exists():
             missing.append(f"{number}-fanart.jpg")
@@ -154,6 +151,26 @@ class MediaProcessor:
         thumb_file = output_dir / f"{number}-thumb.jpg"
         if not thumb_file.exists():
             missing.append(f"{number}-thumb.jpg")
+
+        poster_file = output_dir / f"{number}-poster.jpg"
+        if not poster_file.exists():
+            # 检查fanart是否存在且宽度大于700px，如果满足则裁剪作为poster
+            if fanart_file.exists():
+                try:
+                    with Image.open(fanart_file) as img:
+                        width, height = img.size
+                        if width > 700:
+                            # 裁剪右半部分作为poster
+                            right_half = img.crop((width // 2, 0, width, height))
+                            poster_path = output_dir / f"{number}-poster.jpg"
+                            right_half.save(poster_path, quality=95)
+                            print(f"✓ 使用fanart右半部分作为poster: {width}x{height} -> {width//2}x{height}")
+                        else:
+                            missing.append(f"{number}-poster.jpg")
+                except Exception as e:
+                    missing.append(f"{number}-poster.jpg (裁剪失败: {e})")
+            else:
+                missing.append(f"{number}-poster.jpg")
 
         nfo_file = output_dir / f"{number}.nfo"
         if not nfo_file.exists():
