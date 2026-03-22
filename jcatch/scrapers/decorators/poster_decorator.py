@@ -7,6 +7,9 @@ from jcatch.scrapers.decorators.base_decorator import ScraperDecorator
 class PosterDecorator(ScraperDecorator):
     """Decorator that replaces poster URL from a different scraper.
 
+    With chain retry: if poster_scraper returns empty (or previous
+    decorator returned empty), retry with own scraper.
+
     Example:
         # Get metadata from JavBus, but poster from Jav321
         base = JavBusScraper()
@@ -35,7 +38,7 @@ class PosterDecorator(ScraperDecorator):
         return metadata
 
     def _get_poster(self, number: str) -> ImageUrl:
-        """Get poster URL from the poster scraper.
+        """Get poster URL from poster scraper.
 
         Args:
             number: Movie number
@@ -43,13 +46,44 @@ class PosterDecorator(ScraperDecorator):
         Returns:
             ImageUrl object with URL and headers
         """
-        # Try to call _get_poster on the poster_scraper
-        if hasattr(self.poster_scraper, '_get_poster'):
-            return self.poster_scraper._get_poster(number)
+        # First try: check wrapped's poster (might be empty from previous decorator)
+        wrapped_poster = self._get_wrapped_poster()
 
-        # Alternative: fetch full metadata and extract poster
-        if hasattr(self.poster_scraper, 'fetch_metadata'):
-            metadata = self.poster_scraper.fetch_metadata(number)
-            return metadata.poster
+        # If wrapped poster is empty or invalid, retry with own scraper
+        if not wrapped_poster.url:
+            print(f"[{self.__class__.__name__}] Poster empty, retrying with own scraper")
+            return self._call_poster_scraper(number)
 
+        return wrapped_poster
+
+    def _get_wrapped_poster(self) -> ImageUrl:
+        """Get poster from wrapped metadata.
+
+        Returns empty if wrapped doesn't have poster field.
+        """
+        # Try to get poster from wrapped scraper's metadata
+        if hasattr(self.wrapped, 'fetch_metadata'):
+            try:
+                metadata = self.wrapped.fetch_metadata("")
+                return metadata.poster
+            except Exception:
+                pass
         return ImageUrl(url="")
+
+    def _call_poster_scraper(self, number: str) -> ImageUrl:
+        """Call poster scraper and return result.
+
+        Allows catching and logging of any errors.
+        """
+        try:
+            # Try to call _get_poster on poster_scraper
+            if hasattr(self.poster_scraper, '_get_poster'):
+                return self.poster_scraper._get_poster(number)
+
+            # Alternative: fetch full metadata and extract poster
+            if hasattr(self.poster_scraper, 'fetch_metadata'):
+                metadata = self.poster_scraper.fetch_metadata(number)
+                return metadata.poster
+        except Exception as e:
+            print(f"[{self.__class__.__name__}] Poster scraper error: {e}")
+            return ImageUrl(url="")

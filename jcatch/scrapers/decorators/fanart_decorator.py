@@ -7,6 +7,9 @@ from jcatch.scrapers.decorators.base_decorator import ScraperDecorator
 class FanartDecorator(ScraperDecorator):
     """Decorator that replaces fanart/thumb from a different scraper.
 
+    With chain retry: if fanart_scraper returns empty, print log
+    and the next decorator will retry with its own scraper.
+
     Example:
         # Get metadata from JavBus, but fanart from DMM
         base = JavBusScraper()
@@ -36,7 +39,7 @@ class FanartDecorator(ScraperDecorator):
         return metadata
 
     def _get_fanart(self, number: str) -> ImageUrl:
-        """Get fanart URL from the fanart scraper.
+        """Get fanart URL from fanart scraper.
 
         Args:
             number: Movie number
@@ -44,13 +47,29 @@ class FanartDecorator(ScraperDecorator):
         Returns:
             ImageUrl object with URL and headers
         """
-        # Try to call _get_fanart on the fanart_scraper
-        if hasattr(self.fanart_scraper, '_get_fanart'):
-            return self.fanart_scraper._get_fanart(number)
+        # First try: call fanart_scraper
+        result = self._call_fanart_scraper(number)
 
-        # Alternative: fetch full metadata and extract fanart
-        if hasattr(self.fanart_scraper, 'fetch_metadata'):
-            metadata = self.fanart_scraper.fetch_metadata(number)
-            return metadata.fanart
+        # Chain retry: if empty, print log and note for retry
+        if not result.url:
+            print(f"[{self.__class__.__name__}] Fanart empty, next decorator should retry")
 
-        return ImageUrl(url="")
+        return result
+
+    def _call_fanart_scraper(self, number: str) -> ImageUrl:
+        """Call fanart scraper and return result.
+
+        Allows catching and logging of any errors.
+        """
+        try:
+            # Try to call _get_fanart on fanart_scraper
+            if hasattr(self.fanart_scraper, '_get_fanart'):
+                return self.fanart_scraper._get_fanart(number)
+
+            # Alternative: fetch full metadata and extract fanart
+            if hasattr(self.fanart_scraper, 'fetch_metadata'):
+                metadata = self.fanart_scraper.fetch_metadata(number)
+                return metadata.fanart
+        except Exception as e:
+            print(f"[{self.__class__.__name__}] Fanart scraper error: {e}")
+            return ImageUrl(url="")

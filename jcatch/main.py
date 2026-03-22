@@ -39,6 +39,7 @@ def get_scraper() -> "BaseScraper":
     # Default: use JavBus for everything
     base = JavBusScraper()
     with_poster = PosterDecorator(base, Www324JavScraper())
+    with_poster = PosterDecorator(with_poster, JavWineScraper())
     return with_poster
 
 
