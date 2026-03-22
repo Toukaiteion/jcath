@@ -31,13 +31,13 @@ class PosterDecorator(ScraperDecorator):
         metadata = self.wrapped.fetch_metadata(number)
 
         # Replace poster URL from poster_scraper
-        poster = self._get_poster(number)
+        poster = self._get_poster(number, metadata)
         if poster.url:
             metadata.poster = poster
 
         return metadata
 
-    def _get_poster(self, number: str) -> ImageUrl:
+    def _get_poster(self, number: str, wrapper_metadata: MovieMetadata) -> ImageUrl:
         """Get poster URL from poster scraper.
 
         Args:
@@ -46,29 +46,13 @@ class PosterDecorator(ScraperDecorator):
         Returns:
             ImageUrl object with URL and headers
         """
-        # First try: check wrapped's poster (might be empty from previous decorator)
-        wrapped_poster = self._get_wrapped_poster()
 
         # If wrapped poster is empty or invalid, retry with own scraper
-        if not wrapped_poster.url:
+        if not wrapper_metadata.poster or not wrapper_metadata.poster.url:
             print(f"[{self.__class__.__name__}] Poster empty, retrying with own scraper")
             return self._call_poster_scraper(number)
 
-        return wrapped_poster
-
-    def _get_wrapped_poster(self) -> ImageUrl:
-        """Get poster from wrapped metadata.
-
-        Returns empty if wrapped doesn't have poster field.
-        """
-        # Try to get poster from wrapped scraper's metadata
-        if hasattr(self.wrapped, 'fetch_metadata'):
-            try:
-                metadata = self.wrapped.fetch_metadata("")
-                return metadata.poster
-            except Exception:
-                pass
-        return ImageUrl(url="")
+        return wrapper_metadata.poster
 
     def _call_poster_scraper(self, number: str) -> ImageUrl:
         """Call poster scraper and return result.
