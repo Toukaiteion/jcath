@@ -1,5 +1,4 @@
 """JavBus scraper implementation using Selenium."""
-
 import os
 import platform
 import re
@@ -140,6 +139,7 @@ class JavBusScraper(BaseScraper):
             num = self._parse_num(soup)
             title = self._parse_title(soup)
             releasedate = self._parse_releasedate(soup)
+            year = self._parse_year(releasedate)
             runtime = self._parse_runtime(soup)
             studio = self._parse_studio(soup)
             label = self._parse_label(soup)
@@ -160,11 +160,13 @@ class JavBusScraper(BaseScraper):
                 originaltitle=title,
                 sorttitle=title,
                 releasedate=releasedate,
+                year=year,
                 runtime=runtime,
                 studio=studio,
                 maker=studio,
                 label=label,
                 actors=actors,
+                tags=genres,
                 genres=genres,
                 fanart=ImageUrl(url=fanart_url, headers=headers),
                 thumb=ImageUrl(url=fanart_url, headers=headers),
@@ -191,15 +193,24 @@ class JavBusScraper(BaseScraper):
     def _parse_releasedate(self, soup: BeautifulSoup) -> str:
         """Parse release date."""
         paragraph = self._find_paragraph_with_header(soup, "發行日期:")
-        if paragraph and paragraph.select_one("span"):
-            return paragraph.select_one("span:last-child").text.strip()
-        return ""
+        # 提取p标签内所有文字，去除首尾空白
+        full_text = paragraph.get_text(strip=True)  # 结果：'發行日期:2025-06-27'
+
+        # 关键：按冒号分割，取分割后的第二部分
+        if ':' in full_text:
+            # split(':') 按冒号分割成列表 → ['發行日期', '2025-06-27']
+            # [1] 取第二部分，strip() 去除可能的空格
+            date_str = full_text.split(':')[1].strip()
+            return date_str
+        else:
+            print("未找到冒号分隔符")
+            return ''
 
     def _parse_runtime(self, soup: BeautifulSoup) -> int:
         """Parse runtime from "125分鐘" format."""
         paragraph = self._find_paragraph_with_header(soup, "長度:")
         if paragraph and paragraph.select_one("span"):
-            text = paragraph.select_one("span:last-child").text
+            text = paragraph.get_text(strip=True)
             match = re.search(r"(\d+)", text)
             return int(match.group(1)) if match else 0
         return 0
@@ -245,10 +256,13 @@ class JavBusScraper(BaseScraper):
     def _parse_genres(self, soup: BeautifulSoup) -> list[str]:
         """Parse genres from .genre a elements."""
         genres = []
-        for link in soup.select(".genre a"):
-            name = link.text.strip()
-            if name:
-                genres.append(name)
+        for span in soup.find_all('span', class_='genre'):
+            # 找当前span下的<a>标签
+            a_tag = span.find('a')
+            if a_tag:  # 只处理有<a>标签的项
+                # 提取文字并去除首尾空白
+                text = a_tag.get_text(strip=True)
+                genres.append(text)
         return genres
 
     def _parse_fanart_url(self, soup: BeautifulSoup) -> str:
@@ -279,3 +293,9 @@ class JavBusScraper(BaseScraper):
             if header and header.text.strip() == header_text:
                 return p
         return None
+
+    def _parse_year(self, releasedate):
+
+        # 切片取前4个字符
+        year = releasedate[:4]
+        return int(year)

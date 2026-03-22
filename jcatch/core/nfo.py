@@ -74,7 +74,7 @@ def generate_nfo(metadata: MovieMetadata) -> str:
     _add_cdata_element(movie, "originaltitle", metadata.originaltitle)
     _add_cdata_element(movie, "sorttitle", metadata.sorttitle)
     _add_cdata_element(movie, "customrating", metadata.customrating)
-    _add_cdata_element(movie, "mpaa", metadata.mpaa)
+    _add_element(movie, "mpaa", metadata.mpaa)
 
     # Studio
     studio = ET.SubElement(movie, "studio")
@@ -104,35 +104,30 @@ def generate_nfo(metadata: MovieMetadata) -> str:
     # Actors
     for actor in metadata.actors:
         actor_elem = ET.SubElement(movie, "actor")
-        _add_cdata_element(actor_elem, "name", actor.name)
+        _add_element(actor_elem, "name", actor.name)
 
     # Maker and label (CDATA wrapped)
-    _add_cdata_element(movie, "maker", metadata.maker)
-    _add_cdata_element(movie, "label", metadata.label)
+    _add_element(movie, "maker", metadata.maker)
+    _add_element(movie, "label", metadata.label)
 
-    # Tags (exactly 2 elements as in example)
-    for tag in metadata.tags[:2]:
+    for tag in metadata.tags:
         _add_element(movie, "tag", tag)
-    for _ in range(2 - len(metadata.tags)):
-        ET.SubElement(movie, "tag")
 
     # Genres (exactly 2 elements as in example)
-    for genre in metadata.genres[:2]:
+    for genre in metadata.genres:
         _add_element(movie, "genre", genre)
-    for _ in range(2 - len(metadata.genres)):
-        ET.SubElement(movie, "genre")
 
     # Number (CDATA wrapped)
-    _add_cdata_element(movie, "num", metadata.num)
+    _add_element(movie, "num", metadata.num)
 
     # Dates (CDATA wrapped)
-    _add_cdata_element(movie, "premiered", metadata.premiered)
-    _add_cdata_element(movie, "releasedate", metadata.releasedate)
-    _add_cdata_element(movie, "release", metadata.release)
+    _add_element(movie, "premiered", metadata.premiered)
+    _add_element(movie, "releasedate", metadata.releasedate)
+    _add_element(movie, "release", metadata.release)
 
     # URLs (CDATA wrapped)
-    _add_cdata_element(movie, "cover", metadata.cover)
-    _add_cdata_element(movie, "website", metadata.website)
+    _add_element(movie, "cover", metadata.cover)
+    _add_element(movie, "website", metadata.website)
 
     # Format output with declaration and CDATA support
     xml_str = _tostring_cdata(movie)
