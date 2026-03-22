@@ -73,7 +73,7 @@ def generate_nfo(metadata: MovieMetadata) -> str:
     _add_cdata_element(movie, "title", metadata.title)
     _add_cdata_element(movie, "originaltitle", metadata.originaltitle)
     _add_cdata_element(movie, "sorttitle", metadata.sorttitle)
-    _add_cdata_element(movie, "customrating", metadata.customrating)
+    _add_element(movie, "customrating", metadata.customrating)
     _add_element(movie, "mpaa", metadata.mpaa)
 
     # Studio

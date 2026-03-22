@@ -42,22 +42,26 @@ class MediaProcessor:
         number = self.scraper.parse_number(str(video_path))
         if not number:
             raise ValueError(f"Could not extract movie number from: {video_path}")
+        print("1/5 识别到媒体号码 ")
 
         # 2. Fetch metadata from scraper
+        print("2/5 开始搜刮媒体源数据")
         metadata = self.scraper.fetch_metadata(number)
 
-        # 3. Create output directory
         output_path = Path(output_dir) / number
         output_path.mkdir(parents=True, exist_ok=True)
 
-        # 4. Copy video file
-        self._copy_video(video_path, output_path, number)
-
-        # 5. Download and save images
+        # 3. Download and save images
+        print("3/5 开始下载图片资源")
         self._download_images(metadata, output_path, number)
 
-        # 6. Generate NFO file
+        # 4. Generate NFO file
+        print("4/5 开始生成元数据文件.nfo")
         self._generate_nfo(metadata, output_path, number)
+
+        # 5. Copy video file
+        print("6/6 开始复制媒体文件，从" + str(video_path) + "复制到" + str(output_path))
+        self._copy_video(video_path, output_path, number)
 
         return str(output_path)
 
