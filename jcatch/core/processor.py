@@ -45,7 +45,7 @@ class MediaProcessor:
         number = self.scraper.parse_number(str(video_path))
         if not number:
             raise ValueError(f"Could not extract movie number from: {video_path}")
-        print("1/5 识别到媒体号码 ")
+        print("1/5 识别到媒体号码: " + number)
 
         # 2. Fetch metadata from scraper
         print("2/5 开始搜刮媒体源数据")
@@ -54,21 +54,33 @@ class MediaProcessor:
         output_path = Path(output_dir) / number
         output_path.mkdir(parents=True, exist_ok=True)
 
-        # 3. Download and save images
-        print("3/5 开始下载图片资源")
-        self._download_images(metadata, output_path, number)
+        try:
+            # 3. Download and save images
+            print("3/5 开始下载图片资源")
+            self._download_images(metadata, output_path, number)
 
-        # 4. Generate NFO file
-        print("4/5 开始生成元数据文件.nfo")
-        self._generate_nfo(metadata, output_path, number)
+            # 4. Generate NFO file
+            print("4/5 开始生成元数据文件.nfo")
+            self._generate_nfo(metadata, output_path, number)
 
-        # 5. Validate output integrity before copying video
-        print("5/6 检查输出数据完整性")
-        self._validate_output(output_path, number)
+            # 5. Validate output integrity before copying video
+            print("5/6 检查输出数据完整性")
+            self._validate_output(output_path, number)
 
-        # 6. Copy video file
-        print("6/6 开始复制媒体文件，从" + str(video_path) + "复制到" + str(output_path))
-        self._copy_video(video_path, output_path, number)
+            # 6. Copy video file
+            print("6/6 开始复制媒体文件，从" + str(video_path) + "复制到" + str(output_path))
+            self._copy_video(video_path, output_path, number)
+        except Exception as e:
+            # 错误处理：打印日志并删除output目录
+            error_msg = f"处理步骤3-6失败: {str(e)}"
+            print(f"❌ {error_msg}")
+            print(f"正在删除输出目录: {output_path}")
+
+            # 确保目录存在再删除
+            if output_path.exists():
+                shutil.rmtree(output_path, ignore_errors=True)
+
+            raise Exception(error_msg) from e
 
         return str(output_path)
 
