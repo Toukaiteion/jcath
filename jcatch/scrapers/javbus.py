@@ -1,9 +1,13 @@
 """JavBus scraper implementation using Selenium."""
 
+import os
+import platform
 import re
 import time
+from pathlib import Path
 from typing import Optional
 
+from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -34,11 +38,57 @@ class JavBusScraper(BaseScraper):
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
-        options.binary_location = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+
+        # Load .env file
+        load_dotenv()
+
+        # Set Chrome binary location
+        chrome_path = self._get_chrome_path()
+        if chrome_path:
+            options.binary_location = chrome_path
+            print(f"Chrome 路径: {chrome_path}")
 
         service = Service(ChromeDriverManager().install())
         print("download driver at: " + ChromeDriverManager().install())
-        return webdriver.Chrome(service=service, options=options)
+        driver = webdriver.Chrome(service=service, options=options)
+
+        # Print Chrome version info
+        chrome_version = driver.capabilities.get('browserVersion', 'unknown')
+        chromedriver_version = driver.capabilities.get('chrome', {}).get('chromedriverVersion', 'unknown').split(' ')[0]
+        print(f"Chrome版本：{chrome_version}")
+        print(f"ChromeDriver版本：{chromedriver_version}")
+        return driver
+
+    def _get_chrome_path(self) -> str:
+        """获取 Chrome 可执行文件路径。
+
+        优先级：
+        1. 环境变量 JCATCH_CHROME_PATH
+        2. .env 文件中的配置
+        3. 平台默认值
+
+        Returns:
+            Chrome 可执行文件的绝对路径
+        """
+        # 读取环境变量（dotenv 已加载）
+        if chrome_path := os.getenv("JCATCH_CHROME_PATH"):
+            return chrome_path
+
+        # 平台默认值
+        if platform.system() == "Windows":
+            return r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+        else:  # Linux/WSL
+            # 尝试常见路径
+            candidates = [
+                "/usr/bin/google-chrome",
+                "/usr/bin/chromium-browser",
+                "/usr/bin/chromium",
+                "/opt/google/chrome/google-chrome",
+            ]
+            for path in candidates:
+                if Path(path).exists():
+                    return path
+            return ""  # 返回空字符串，让 webdriver-manager 尝试自动检测
 
     def __del__(self):
         """Cleanup: close browser when scraper is destroyed."""
