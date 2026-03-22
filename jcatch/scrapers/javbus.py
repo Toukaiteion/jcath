@@ -155,9 +155,12 @@ class JavBusScraper(BaseScraper):
             return MovieMetadata(
                 num=num,
                 title=title,
+                originaltitle=title,
+                sorttitle=title,
                 releasedate=releasedate,
                 runtime=runtime,
                 studio=studio,
+                maker=studio,
                 label=label,
                 actors=actors,
                 genres=genres,
