@@ -23,12 +23,13 @@ class MediaProcessor:
         """
         self.scraper = scraper
 
-    def process(self, video_path: str, output_dir: str = "output") -> str:
+    def process(self, video_path: str, output_dir: str = "output", delete_source_file: bool = False) -> str:
         """Process a video file and generate complete directory structure.
 
         Args:
             video_path: Path to the input video file
             output_dir: Base directory for output (default: "output")
+            delete_source_file: If True, delete the source file after successful processing (default: False)
 
         Returns:
             Path to the generated output directory
@@ -81,6 +82,15 @@ class MediaProcessor:
                 shutil.rmtree(output_path, ignore_errors=True)
 
             raise Exception(error_msg) from e
+
+        # 7. Delete source file if requested and processing was successful
+        if delete_source_file and video_path.exists():
+            try:
+                print(f"正在删除源文件: {video_path}")
+                video_path.unlink()
+                print(f"✓ 已删除源文件: {video_path}")
+            except Exception as e:
+                print(f"⚠ 删除源文件失败: {e}")
 
         return str(output_path)
 

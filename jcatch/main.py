@@ -58,13 +58,21 @@ def get_scraper() -> "BaseScraper":
     default=None,
     help="Scraper to use (e.g., jav321, dmm)",
 )
-def main(video_path: Path, output: Path, scraper: str | None) -> None:
+@click.option(
+    "--delete-source",
+    "-d",
+    is_flag=True,
+    default=False,
+    help="Delete source video file after successful processing",
+)
+def main(video_path: Path, output: Path, scraper: str | None, delete_source: bool = False) -> None:
     """Process a JAV video file and generate organized media directory.
 
     VIDEO_PATH: Path to the video file to process
 
     Example:
         jcatch /path/to/FSDSS-549.mp4 -o output
+        jcatch /path/to/FSDSS-549.mp4 -o output -d  # 删除源文件
     """
     try:
         # Get scraper (TODO: implement scraper selection)
@@ -75,7 +83,7 @@ def main(video_path: Path, output: Path, scraper: str | None) -> None:
 
         # Process video
         click.echo(f"Processing: {video_path}")
-        output_dir = processor.process(str(video_path), str(output))
+        output_dir = processor.process(str(video_path), str(output), delete_source)
 
         click.echo(f"✓ Done! Output: {output_dir}")
 
