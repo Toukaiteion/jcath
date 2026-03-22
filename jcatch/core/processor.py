@@ -3,6 +3,8 @@
 from pathlib import Path
 import shutil
 
+from xml.etree import ElementTree as ET
+
 from jcatch.scrapers.base import BaseScraper
 from jcatch.core.models import MovieMetadata
 from jcatch.core.nfo import generate_nfo
@@ -59,7 +61,11 @@ class MediaProcessor:
         print("4/5 开始生成元数据文件.nfo")
         self._generate_nfo(metadata, output_path, number)
 
-        # 5. Copy video file
+        # 5. Validate output integrity before copying video
+        print("5/6 检查输出数据完整性")
+        self._validate_output(output_path, number)
+
+        # 6. Copy video file
         print("6/6 开始复制媒体文件，从" + str(video_path) + "复制到" + str(output_path))
         self._copy_video(video_path, output_path, number)
 
@@ -113,3 +119,66 @@ class MediaProcessor:
         nfo_content = generate_nfo(metadata)
         nfo_path = output_dir / f"{number}.nfo"
         nfo_path.write_text(nfo_content, encoding="utf-8")
+
+    def _validate_output(self, output_dir: Path, number: str) -> None:
+        """Validate output directory integrity before copying video.
+
+        Checks:
+        - extrafanart directory exists
+        - poster, fanart, thumb image files exist
+        - nfo file exists
+        - nfo file contains required values (title, poster, thumb, fanart)
+
+        Args:
+            output_dir: Output directory to validate
+            number: Movie number for filename
+
+        Raises:
+            Exception: If validation fails, after deleting the output directory
+        """
+        missing = []
+
+        # 1. Check file system resources
+        extrafanart_dir = output_dir / "extrafanart"
+        if not extrafanart_dir.exists():
+            missing.append("extrafanart目录")
+
+        poster_file = output_dir / f"{number}-poster.jpg"
+        if not poster_file.exists():
+            missing.append(f"{number}-poster.jpg")
+
+        fanart_file = output_dir / f"{number}-fanart.jpg"
+        if not fanart_file.exists():
+            missing.append(f"{number}-fanart.jpg")
+
+        thumb_file = output_dir / f"{number}-thumb.jpg"
+        if not thumb_file.exists():
+            missing.append(f"{number}-thumb.jpg")
+
+        nfo_file = output_dir / f"{number}.nfo"
+        if not nfo_file.exists():
+            missing.append(f"{number}.nfo")
+
+        # 2. Check NFO content if file exists
+        if nfo_file.exists():
+            try:
+                tree = ET.parse(nfo_file)
+                root = tree.getroot()
+
+                required_tags = ["title", "poster", "thumb", "fanart"]
+                for tag in required_tags:
+                    elem = root.find(tag)
+                    if elem is None or not elem.text or not elem.text.strip():
+                        missing.append(f"NFO中{tag}标签为空")
+            except ET.ParseError as e:
+                missing.append(f"NFO文件解析失败: {e}")
+
+        # 3. If any resources missing, clean up and raise error
+        if missing:
+            error_msg = "数据完整性检查失败，缺少资源: " + ", ".join(missing)
+            print(f"❌ {error_msg}")
+            print(f"正在删除输出目录: {output_dir}")
+            shutil.rmtree(output_dir, ignore_errors=True)
+            raise Exception(error_msg)
+
+        print("✓ 数据完整性检查通过")
