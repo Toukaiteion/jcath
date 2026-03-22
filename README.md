@@ -12,14 +12,43 @@ JAV video metadata fetcher and organizer.
 
 ## Installation
 
+### Development Mode
+
 ```bash
+# Install in editable mode for development
 pip install -e .
 ```
 
-Or using requirements:
+### From Built Package
 
 ```bash
-pip install -r requirements.txt
+# Build the package
+pip install build
+python -m build
+
+# Install from built wheel
+pip install dist/jcatch-0.1.0-py3-none-any.whl
+```
+
+### From PyPI (after publishing)
+
+```bash
+pip install jcatch
+```
+
+## Packaging & Publishing
+
+To build and publish the package to PyPI:
+
+```bash
+# 1. Install build tools
+pip install build twine
+
+# 2. Build source and wheel distributions
+python -m build
+
+# 3. Upload to PyPI
+twine upload dist/*
 ```
 
 ## Usage
