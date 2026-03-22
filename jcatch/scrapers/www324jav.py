@@ -39,7 +39,7 @@ class Www324JavScraper(BaseScraper):
             ImageUrl object with URL and empty headers
         """
         url = f"{self.BASE_URL}/{number.lower()}"
-
+        print("从" + url + "获取封面")
         try:
             response = requests.get(url, timeout=30)
             response.raise_for_status()
