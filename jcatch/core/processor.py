@@ -129,7 +129,8 @@ class MediaProcessor:
             output_dir: Target directory
             number: Movie number for filename
         """
-        output_file = output_dir / f"{number}.mp4"
+        suffix = video_path.suffix
+        output_file = output_dir / f"{number}{suffix}"
         shutil.copy2(video_path, output_file)
 
     def _download_images(self, metadata: MovieMetadata, output_dir: Path, number: str) -> None:
