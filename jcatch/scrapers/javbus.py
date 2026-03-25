@@ -284,7 +284,10 @@ class JavBusScraper(BaseScraper):
         for link in soup.select("#sample-waterfall .sample-box"):
             href = link.get("href")
             if href:
-                urls.append(href)
+                if href.startswith("/"):
+                    urls.append(f"{self.BASE_URL}{href}")
+                else:
+                    urls.append(href)
         return urls
 
     @staticmethod
