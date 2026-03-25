@@ -182,11 +182,13 @@ class MediaProcessor:
                     with Image.open(fanart_file) as img:
                         width, height = img.size
                         if width > 700:
-                            # 裁剪右半部分作为poster
-                            right_half = img.crop((width // 2, 0, width, height))
+                            # 修改后的裁剪逻辑：限制宽度为最大379px
+                            max_width = 379
+                            crop_width = min(width // 2, max_width)
+                            right_half = img.crop((width - crop_width, 0, width, height))
                             poster_path = output_dir / f"{number}-poster.jpg"
                             right_half.save(poster_path, quality=95)
-                            print(f"✓ 使用fanart右半部分作为poster: {width}x{height} -> {width//2}x{height}")
+                            print(f"✓ 使生成poster: {width}x{height} -> {crop_width}x{height}")
                         else:
                             missing.append(f"{number}-poster.jpg")
                 except Exception as e:
