@@ -1,7 +1,9 @@
 """Main media processor that orchestrates the workflow."""
 
 from pathlib import Path
+import random
 import shutil
+import time
 
 from xml.etree import ElementTree as ET
 from PIL import Image
@@ -144,12 +146,15 @@ class MediaProcessor:
         # Main images
         if metadata.poster.url:
             ImageDownloader.download(metadata.poster, output_dir / f"{number}-poster.jpg")
+            time.sleep(random.uniform(2, 8))
 
         if metadata.thumb.url:
             ImageDownloader.download(metadata.thumb, output_dir / f"{number}-thumb.jpg")
+            time.sleep(random.uniform(2, 8))
 
         if metadata.fanart.url:
             ImageDownloader.download(metadata.fanart, output_dir / f"{number}-fanart.jpg")
+            time.sleep(random.uniform(2, 8))
 
         # Extra fanart screenshots
         if metadata.extrafanart:
@@ -158,6 +163,7 @@ class MediaProcessor:
 
             for i, image in enumerate(metadata.extrafanart, start=1):
                 ImageDownloader.download(image, extra_dir / f"extrafanart-{i}.jpg")
+                time.sleep(random.uniform(2, 8))
 
     def _generate_nfo(self, metadata: MovieMetadata, output_dir: Path, number: str) -> None:
         """Generate NFO file.
