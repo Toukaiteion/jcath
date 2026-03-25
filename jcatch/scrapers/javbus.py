@@ -95,19 +95,6 @@ class JavBusScraper(BaseScraper):
         if hasattr(self, "driver") and self.driver:
             self.driver.quit()
 
-    def parse_number(self, filepath: str) -> str:
-        """Extract movie number and convert to uppercase.
-
-        Args:
-            filepath: Path to video file
-
-        Returns:
-            Movie number in uppercase (e.g., "START-534")
-        """
-        from pathlib import Path
-        number = Path(filepath).stem
-        return number.upper()
-
     def fetch_metadata(self, number: str, jav_key: str | None = None) -> MovieMetadata:
         """Fetch metadata from javbus.com using Selenium.
 

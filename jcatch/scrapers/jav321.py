@@ -6,7 +6,6 @@ You will need to implement the actual scraping logic based on the target website
 
 from jcatch.scrapers.base import BaseScraper
 from jcatch.core.models import MovieMetadata
-from jcatch.utils.file import extract_number_from_path
 
 
 class Jav321Scraper(BaseScraper):
@@ -15,10 +14,6 @@ class Jav321Scraper(BaseScraper):
     NOTE: This is a placeholder. Actual implementation needs to be added
     based on the website's structure and your specific requirements.
     """
-
-    def parse_number(self, filepath: str) -> str:
-        """Extract movie number from file path."""
-        return extract_number_from_path(filepath)
 
     def fetch_metadata(self, number: str) -> MovieMetadata:
         """Fetch metadata for a given movie number.

@@ -12,19 +12,6 @@ class JavWineScraper(BaseScraper):
 
     BASE_URL = "https://jav.wine"
 
-    def parse_number(self, filepath: str) -> str:
-        """Extract movie number and convert to uppercase.
-
-        Args:
-            filepath: Path to video file
-
-        Returns:
-            Movie number in uppercase (e.g., "FSDSS-549")
-        """
-        from pathlib import Path
-        number = Path(filepath).stem
-        return number.upper()
-
     def fetch_metadata(self, number: str):
         """This scraper only provides poster images, not full metadata."""
         raise NotImplementedError("Use _get_poster() method instead of fetch_metadata()")

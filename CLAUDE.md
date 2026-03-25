@@ -27,7 +27,7 @@ JCatch uses a **strategy pattern** with dependency injection for the scraper lay
 ```
 Video Path
     ↓
-[BaseScraper.parse_number] → Movie Number (e.g., "FSDSS-549")
+[extract_number_from_path] → Movie Number (e.g., "FSDSS-549")
     ↓
 [BaseScraper.fetch_metadata] → MovieMetadata (Pydantic model)
     ↓
@@ -48,7 +48,8 @@ Video Path
 | Core | `core/nfo.py` | XML generation from `MovieMetadata` |
 | Scrapers | `scrapers/base.py` | `BaseScraper` abstract interface |
 | Scrapers | `scrapers/*.py` | Concrete implementations (implement `BaseScraper`) |
-| Scrapers | `scrapers/decorators/*.py` | Decorator pattern for scraper composition |
+| Scrapers | `scrapers/decorators/*.py` | Decorator pattern for scraper scraper composition |
+| Utils | `utils/file.py` | `extract_number_from_path` - movie number extraction |
 | Utils | `utils/downloader.py` | `ImageDownloader` - generic HTTP download with headers |
 
 ### Decorator Pattern
@@ -83,16 +84,12 @@ from jcatch.scrapers.base import BaseScraper
 from jcatch.core.models import MovieMetadata
 
 class MyScraper(BaseScraper):
-    def parse_number(self, filepath: str) -> str:
-        # Extract number from filepath
-        ...
-
     def fetch_metadata(self, number: str) -> MovieMetadata:
         # Fetch and return MovieMetadata with all fields
         ...
 ```
 
-Then configure in `main.py`'s `get_scraper()` function.
+Number extraction is handled by `utils.file.extract_number_from_path` in `MediaProcessor`. Configure the scraper in `main.py`'s `get_scraper()` function.
 
 ### Key Design Decisions
 

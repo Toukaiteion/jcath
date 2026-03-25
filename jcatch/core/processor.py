@@ -10,6 +10,7 @@ from jcatch.scrapers.base import BaseScraper
 from jcatch.core.models import MovieMetadata, ProcessConfiguration
 from jcatch.core.nfo import generate_nfo
 from jcatch.utils.downloader import ImageDownloader
+from jcatch.utils.file import extract_number_from_path
 
 
 class MediaProcessor:
@@ -40,8 +41,12 @@ class MediaProcessor:
         output_dir = config.output_dir
         delete_source_file = config.delete_source
 
-        # 1. Extract movie number from file path
-        number = self.scraper.parse_number(str(video_path))
+        # 1. Extract movie number from file path using centralized utility
+        number = extract_number_from_path(str(video_path))
+        if not number:
+            # Fallback to simple stem extraction if regex patterns don't match
+            number = Path(video_path).stem.upper()
+
         if not number:
             raise ValueError(f"Could not extract movie number from: {video_path}")
         print("1/5 识别到媒体号码: " + number)

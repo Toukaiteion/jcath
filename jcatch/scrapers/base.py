@@ -12,22 +12,6 @@ class BaseScraper(ABC):
     """
 
     @abstractmethod
-    def parse_number(self, filepath: str) -> str:
-        """Extract movie number from file path.
-
-        Args:
-            filepath: Path to the video file
-
-        Returns:
-            Movie number (e.g., "FSDSS-549")
-
-        Example:
-            >>> scraper.parse_number("/path/to/FSDSS-549.mp4")
-            "FSDSS-549"
-        """
-        pass
-
-    @abstractmethod
     def fetch_metadata(self, number: str) -> MovieMetadata:
         """Fetch metadata for a given movie number.
 

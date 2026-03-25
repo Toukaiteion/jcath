@@ -20,11 +20,7 @@ class ScraperDecorator(BaseScraper):
         """
         self.wrapped = wrapped
 
-    def parse_number(self, filepath: str) -> str:
-        """Parse movie number from file path (delegated to wrapped)."""
-        return self.wrapped.parse_number(filepath)
-
-    def fetch_metadata(self, number):
+    def fetch_metadata(self, number, jav_key: str | None = None):
         """Fetch metadata (delegated to wrapped by default)."""
         return self.wrapped.fetch_metadata(number)
 
