@@ -41,24 +41,24 @@ class MediaProcessor:
         output_dir = config.output_dir
         delete_source_file = config.delete_source
 
-        # 1. Extract movie number from file path using centralized utility
-        number = extract_number_from_path(str(video_path))
-        if not number:
-            # Fallback to simple stem extraction if regex patterns don't match
-            number = Path(video_path).stem.upper()
+        # 1. Extract movie number from file path using centralized utility or parameter key
+        jav_key = getattr(config, 'key', None)
+        if jav_key:
+            number = str(jav_key).upper()
+        else:
+            number = extract_number_from_path(str(video_path))
+            if not number:
+                # Fallback to simple stem extraction if regex patterns don't match
+                raise ValueError(f"Could not extract movie number from: {video_path}")
 
-        if not number:
-            raise ValueError(f"Could not extract movie number from: {video_path}")
         print("1/5 识别到媒体号码: " + number)
 
         # 2. Fetch metadata from scraper
         print("2/5 开始搜刮媒体源数据")
         # Pass jav_key from config if available
-        jav_key = getattr(config, 'jav_key', None)
-        if jav_key:
-            print(f"使用JavKey: {jav_key}")
-        metadata = self.scraper.fetch_metadata(number, jav_key=jav_key)
+        metadata = self.scraper.fetch_metadata(number)
 
+        number = metadata.num
         output_path = output_dir / number
         output_path.mkdir(parents=True, exist_ok=True)
 

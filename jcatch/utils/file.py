@@ -21,20 +21,15 @@ def extract_number_from_path(filepath: str) -> str:
     """
     filename = Path(filepath).stem
 
-    # Pattern 1: Standard format like FSDSS-549
+    # Pattern 1: Standard format like FSDSS-549 or FSDSS549
     # Matches: LETTERS-NUMBER (e.g., FSDSS-549, SSIS-1234)
-    match = re.search(r'^([A-Z]+)-(\d+)$', filename)
-    if match:
-        return f"{match.group(1)}-{match.group(2)}"
-
-    # Pattern 2: Letter-number format without hyphen (e.g., FSDSS549)
-    match = re.search(r'^([A-Z]+)(\d+)$', filename)
+    match = re.search(r'([A-Za-z]{2,5})-?(\d{2,3})', filename)
     if match:
         return f"{match.group(1)}-{match.group(2)}"
 
     # Pattern 3: Directory name might contain the number
     parent = Path(filepath).parent.name
-    match = re.search(r'([A-Z]+)-(\d+)$', parent)
+    match = re.search(r'([A-Za-z]{2,5})-?(\d{2,3})', parent)
     if match:
         return f"{match.group(1)}-{match.group(2)}"
 
