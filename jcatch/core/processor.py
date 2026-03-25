@@ -46,15 +46,13 @@ class MediaProcessor:
             raise ValueError(f"Could not extract movie number from: {video_path}")
         print("1/5 识别到媒体号码: " + number)
 
-        # 1. Extract movie number from file path
-        number = self.scraper.parse_number(str(video_path))
-        if not number:
-            raise ValueError(f"Could not extract movie number from: {video_path}")
-        print("1/5 识别到媒体号码: " + number)
-
         # 2. Fetch metadata from scraper
         print("2/5 开始搜刮媒体源数据")
-        metadata = self.scraper.fetch_metadata(number)
+        # Pass jav_key from config if available
+        jav_key = getattr(config, 'jav_key', None)
+        if jav_key:
+            print(f"使用JavKey: {jav_key}")
+        metadata = self.scraper.fetch_metadata(number, jav_key=jav_key)
 
         output_path = output_dir / number
         output_path.mkdir(parents=True, exist_ok=True)

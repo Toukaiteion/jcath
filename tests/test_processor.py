@@ -105,3 +105,77 @@ def test_backward_compatibility(tmp_path, mock_scraper, test_video):
     output_path = Path(output_dir)
     assert output_path.exists()
     assert output_path.name == "FSDSS-549"
+
+
+def test_process_configuration_with_jav_key():
+    """Test ProcessConfiguration with jav_key parameter."""
+    config = ProcessConfiguration(
+        video_path=Path("/tmp/test.mp4"),
+        output_dir=Path("/tmp/output"),
+        delete_source=False,
+        jav_key="ABP-123"
+    )
+
+    assert config.jav_key == "ABP-123"
+
+
+def test_jav_key_none_by_default():
+    """Test that jav_key is None by default."""
+    config = ProcessConfiguration(
+        video_path=Path("/tmp/test.mp4"),
+        output_dir=Path("/tmp/output"),
+        delete_source=False
+    )
+
+    assert config.jav_key is None
+
+
+def test_jav_key_passed_to_scraper(tmp_path, mock_scraper, test_video):
+    """Test that jav_key is correctly passed to scraper."""
+    # Modify mock to accept jav_key parameter
+    mock_scraper.fetch_metadata = Mock(return_value=MovieMetadata(
+        num="ABP-123",
+        title="Test Title",
+        fanart_url="https://example.com/fanart.jpg",
+        poster_url="https://example.com/poster.jpg",
+        thumb_url="https://example.com/thumb.jpg",
+        extrafanart_urls=[],
+    ))
+
+    processor = MediaProcessor(mock_scraper)
+    config = ProcessConfiguration(
+        video_path=test_video,
+        output_dir=tmp_path / "output",
+        delete_source=False,
+        jav_key="ABP-123"
+    )
+
+    processor.process(config)
+
+    # Verify fetch_metadata was called with the correct jav_key
+    mock_scraper.fetch_metadata.assert_called_once_with("FSDSS-549", "ABP-123")
+
+
+def test_no_jav_key_passed_to_scraper(tmp_path, mock_scraper, test_video):
+    """Test that no jav_key is passed to scraper when not specified."""
+    # Modify mock to accept jav_key parameter
+    mock_scraper.fetch_metadata = Mock(return_value=MovieMetadata(
+        num="FSDSS-549",
+        title="Test Title",
+        fanart_url="https://example.com/fanart.jpg",
+        poster_url="https://example.com/poster.jpg",
+        thumb_url="https://example.com/thumb.jpg",
+        extrafanart_urls=[],
+    ))
+
+    processor = MediaProcessor(mock_scraper)
+    config = ProcessConfiguration(
+        video_path=test_video,
+        output_dir=tmp_path / "output",
+        delete_source=False
+    )
+
+    processor.process(config)
+
+    # Verify fetch_metadata was called with None for jav_key
+    mock_scraper.fetch_metadata.assert_called_once_with("FSDSS-549", None)

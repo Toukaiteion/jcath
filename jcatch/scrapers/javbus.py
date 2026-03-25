@@ -108,16 +108,19 @@ class JavBusScraper(BaseScraper):
         number = Path(filepath).stem
         return number.upper()
 
-    def fetch_metadata(self, number: str) -> MovieMetadata:
+    def fetch_metadata(self, number: str, jav_key: str | None = None) -> MovieMetadata:
         """Fetch metadata from javbus.com using Selenium.
 
         Args:
             number: Movie number (e.g., "START-534")
+            jav_key: Override number for JavBus URL construction (optional)
 
         Returns:
             MovieMetadata object with scraped data
         """
-        url = f"{self.BASE_URL}/{number}"
+        # Use jav_key if provided, otherwise use the original number
+        bus_number = jav_key if jav_key else number
+        url = f"{self.BASE_URL}/{bus_number}"
 
         try:
             # Navigate to page

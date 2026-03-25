@@ -59,6 +59,7 @@ class ProcessConfiguration(BaseModel):
     video_path: Path = Field(..., description="Path to the input video file")
     output_dir: Path = Field(default="output", description="Base output directory")
     delete_source: bool = Field(default=False, description="Delete source file after processing")
+    jav_key: str | None = Field(default=None, description="Override movie number for JavBus scraping (e.g., 'FSDSS-549')")
 
     @field_validator('video_path')
     @classmethod

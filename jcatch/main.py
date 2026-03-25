@@ -66,7 +66,13 @@ def get_scraper() -> "BaseScraper":
     default=False,
     help="Delete source video file after successful processing",
 )
-def main(video_path: Path, output: Path, scraper: str | None, delete_source: bool = False) -> None:
+@click.option(
+    "--jav-key",
+    "-j",
+    default=None,
+    help="Override movie number for JavBus scraping (e.g., 'FSDSS-549')",
+)
+def main(video_path: Path, output: Path, scraper: str | None, delete_source: bool = False, jav_key: str | None = None) -> None:
     """Process a JAV video file and generate organized media directory.
 
     VIDEO_PATH: Path to the video file to process
@@ -86,7 +92,8 @@ def main(video_path: Path, output: Path, scraper: str | None, delete_source: boo
         config = ProcessConfiguration(
             video_path=video_path,
             output_dir=output,
-            delete_source=delete_source
+            delete_source=delete_source,
+            jav_key=jav_key
         )
 
         # Process with config object
