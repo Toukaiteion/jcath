@@ -6,6 +6,7 @@ import click
 from pathlib import Path
 
 from jcatch.core import MediaProcessor
+from jcatch.core.models import ProcessConfiguration
 from jcatch.scrapers import (
     JavBusScraper, PosterDecorator, JavWineScraper, Www324JavScraper,
 )
@@ -81,9 +82,16 @@ def main(video_path: Path, output: Path, scraper: str | None, delete_source: boo
         # Create processor
         processor = MediaProcessor(scraper_instance)
 
-        # Process video
+        # Create configuration object
+        config = ProcessConfiguration(
+            video_path=video_path,
+            output_dir=output,
+            delete_source=delete_source
+        )
+
+        # Process with config object
         click.echo(f"Processing: {video_path}")
-        output_dir = processor.process(str(video_path), str(output), delete_source)
+        output_dir = processor.process(config)
 
         click.echo(f"✓ Done! Output: {output_dir}")
 

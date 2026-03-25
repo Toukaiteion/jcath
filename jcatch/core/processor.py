@@ -7,7 +7,7 @@ from xml.etree import ElementTree as ET
 from PIL import Image
 
 from jcatch.scrapers.base import BaseScraper
-from jcatch.core.models import MovieMetadata
+from jcatch.core.models import MovieMetadata, ProcessConfiguration
 from jcatch.core.nfo import generate_nfo
 from jcatch.utils.downloader import ImageDownloader
 
@@ -23,24 +23,28 @@ class MediaProcessor:
         """
         self.scraper = scraper
 
-    def process(self, video_path: str, output_dir: str = "output", delete_source_file: bool = False) -> str:
+    def process(self, config: ProcessConfiguration) -> str:
         """Process a video file and generate complete directory structure.
 
         Args:
-            video_path: Path to the input video file
-            output_dir: Base directory for output (default: "output")
-            delete_source_file: If True, delete the source file after successful processing (default: False)
+            config: Processing configuration object
 
         Returns:
             Path to the generated output directory
 
         Raises:
-            FileNotFoundError: If video file doesn't exist
+            FileNotFoundError: If video file doesn't exist (handled by validator)
             Exception: If processing fails
         """
-        video_path = Path(video_path)
-        if not video_path.exists():
-            raise FileNotFoundError(f"Video file not found: {video_path}")
+        video_path = config.video_path
+        output_dir = config.output_dir
+        delete_source_file = config.delete_source
+
+        # 1. Extract movie number from file path
+        number = self.scraper.parse_number(str(video_path))
+        if not number:
+            raise ValueError(f"Could not extract movie number from: {video_path}")
+        print("1/5 识别到媒体号码: " + number)
 
         # 1. Extract movie number from file path
         number = self.scraper.parse_number(str(video_path))
@@ -52,7 +56,7 @@ class MediaProcessor:
         print("2/5 开始搜刮媒体源数据")
         metadata = self.scraper.fetch_metadata(number)
 
-        output_path = Path(output_dir) / number
+        output_path = output_dir / number
         output_path.mkdir(parents=True, exist_ok=True)
 
         try:
@@ -93,6 +97,26 @@ class MediaProcessor:
                 print(f"⚠ 删除源文件失败: {e}")
 
         return str(output_path)
+
+    def process_from_params(self, video_path: str | Path, output_dir: str | Path = "output", delete_source: bool = False) -> str:
+        """Process with individual parameters (backward compatibility).
+
+        This method maintains backward compatibility with existing code.
+
+        Args:
+            video_path: Path to the input video file
+            output_dir: Base directory for output (default: "output")
+            delete_source: If True, delete the source file after successful processing (default: False)
+
+        Returns:
+            Path to the generated output directory
+        """
+        config = ProcessConfiguration(
+            video_path=Path(video_path),
+            output_dir=Path(output_dir),
+            delete_source=delete_source
+        )
+        return self.process(config)
 
     def _copy_video(self, video_path: Path, output_dir: Path, number: str) -> None:
         """Copy video file to output directory.

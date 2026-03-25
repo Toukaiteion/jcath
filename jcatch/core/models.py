@@ -1,6 +1,8 @@
 """Data models for movie metadata."""
 
+from pathlib import Path
 from pydantic import BaseModel, Field
+from pydantic import field_validator
 
 
 class Actor(BaseModel):
@@ -49,3 +51,28 @@ class MovieMetadata(BaseModel):
     extrafanart: list[ImageUrl] = Field(
         default_factory=list, description="Extra fanart/screenshot URLs"
     )
+
+
+class ProcessConfiguration(BaseModel):
+    """Configuration for media processing operations."""
+
+    video_path: Path = Field(..., description="Path to the input video file")
+    output_dir: Path = Field(default="output", description="Base output directory")
+    delete_source: bool = Field(default=False, description="Delete source file after processing")
+
+    @field_validator('video_path')
+    @classmethod
+    def validate_video_path(cls, v):
+        if not v.exists():
+            raise ValueError(f"Video file not found: {v}")
+        if not v.is_file():
+            raise ValueError(f"Path is not a file: {v}")
+        return v
+
+    @field_validator('output_dir')
+    @classmethod
+    def validate_output_dir(cls, v):
+        return v.resolve()
+
+    class Config:
+        arbitrary_types_allowed = True

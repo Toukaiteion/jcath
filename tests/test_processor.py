@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import Mock, MagicMock
 
 from jcatch.core import MediaProcessor
-from jcatch.core.models import MovieMetadata, Actor
+from jcatch.core.models import MovieMetadata, Actor, ProcessConfiguration
 
 
 @pytest.fixture
@@ -36,7 +36,12 @@ def test_video(tmp_path):
 def test_processor_creates_directory_structure(tmp_path, mock_scraper, test_video):
     """Test processor creates correct directory structure."""
     processor = MediaProcessor(mock_scraper)
-    output_dir = processor.process(str(test_video), str(tmp_path / "output"))
+    config = ProcessConfiguration(
+        video_path=test_video,
+        output_dir=tmp_path / "output",
+        delete_source=False
+    )
+    output_dir = processor.process(config)
 
     # Verify directory structure
     output_path = Path(output_dir)
@@ -49,15 +54,54 @@ def test_processor_creates_directory_structure(tmp_path, mock_scraper, test_vide
 def test_processor_calls_scraper_methods(tmp_path, mock_scraper, test_video):
     """Test processor calls scraper methods correctly."""
     processor = MediaProcessor(mock_scraper)
-    processor.process(str(test_video), str(tmp_path / "output"))
+    config = ProcessConfiguration(
+        video_path=test_video,
+        output_dir=tmp_path / "output",
+        delete_source=False
+    )
+    processor.process(config)
 
     # Verify scraper methods were called
     mock_scraper.parse_number.assert_called_once()
     mock_scraper.fetch_metadata.assert_called_once_with("FSDSS-549")
 
 
+def test_processor_with_config_object(tmp_path, mock_scraper, test_video):
+    """Test processor with ProcessConfiguration object."""
+    processor = MediaProcessor(mock_scraper)
+    config = ProcessConfiguration(
+        video_path=test_video,
+        output_dir=tmp_path / "output",
+        delete_source=False
+    )
+    output_dir = processor.process(config)
+
+    # Verify results
+    output_path = Path(output_dir)
+    assert output_path.exists()
+    assert output_path.name == "FSDSS-549"
+
+
 def test_processor_with_nonexistent_file():
     """Test processor raises error for nonexistent file."""
     processor = MediaProcessor(mock_scraper)
-    with pytest.raises(FileNotFoundError):
-        processor.process("/nonexistent/file.mp4", "/output")
+    with pytest.raises(ValueError):
+        # Test that ProcessConfiguration validation catches nonexistent files
+        config = ProcessConfiguration(
+            video_path="/nonexistent/file.mp4",
+            output_dir="/output",
+            delete_source=False
+        )
+        processor.process(config)
+
+
+def test_backward_compatibility(tmp_path, mock_scraper, test_video):
+    """Test that process_from_params method still works."""
+    processor = MediaProcessor(mock_scraper)
+    # This should work exactly like before
+    output_dir = processor.process_from_params(str(test_video), str(tmp_path / "output"), False)
+
+    # Verify results
+    output_path = Path(output_dir)
+    assert output_path.exists()
+    assert output_path.name == "FSDSS-549"
