@@ -98,7 +98,6 @@ class MediaProcessor:
             if config.zip_output:
                 print("正在压缩输出目录...")
                 zip_path = self._zip_output(output_path, number)
-                shutil.rmtree(output_path, ignore_errors=True)
                 return str(zip_path)
 
         except Exception as e:
@@ -271,7 +270,7 @@ class MediaProcessor:
         print("✓ 数据完整性检查通过")
 
     def _zip_output(self, output_dir: Path, number: str) -> Path:
-        """Zip the output directory.
+        """Zip the output directory (metadata only, excludes videos and large files).
 
         Args:
             output_dir: Directory to zip
@@ -280,14 +279,33 @@ class MediaProcessor:
         Returns:
             Path to the created zip file
         """
+        video_extensions = {'.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.m4v', '.webm'}
+        large_file_threshold = 1 * 1024 * 1024 * 1024  # 1GB
+
         zip_path = output_dir.parent / f"{number}.zip"
+        excluded_count = 0
 
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for root, dirs, files in os.walk(output_dir):
                 for file in files:
                     file_path = Path(root) / file
+
+                    # Skip video files
+                    if file_path.suffix.lower() in video_extensions:
+                        excluded_count += 1
+                        continue
+
+                    # Skip large files (>1GB)
+                    if file_path.stat().st_size > large_file_threshold:
+                        excluded_count += 1
+                        print(f"  跳过大文件 (>1GB): {file.name}")
+                        continue
+
                     arcname = file_path.relative_to(output_dir.parent)
                     zipf.write(file_path, arcname)
+
+        if excluded_count > 0:
+            print(f"  已跳过 {excluded_count} 个文件")
 
         print(f"✓ 已创建压缩包: {zip_path}")
         return zip_path
