@@ -56,14 +56,18 @@ class MovieMetadata(BaseModel):
 class ProcessConfiguration(BaseModel):
     """Configuration for media processing operations."""
 
-    video_path: Path = Field(..., description="Path to the input video file")
+    video_path: Path | None = Field(default=None, description="Path to input video file (optional for metadata-only mode)")
     output_dir: Path = Field(default="output", description="Base output directory")
     delete_source: bool = Field(default=False, description="Delete source file after processing")
-    key: str | None = Field(default=None, description="Override movie number for JavBus scraping (e.g., 'FSDSS-549')")
+    key: str | None = Field(default=None, description="Movie number for scraping (e.g., 'FSDSS-549')")
+    metadata_only: bool = Field(default=False, description="Only generate metadata, skip video operations")
+    zip_output: bool = Field(default=False, description="Zip the output directory")
 
     @field_validator('video_path')
     @classmethod
     def validate_video_path(cls, v):
+        if v is None:
+            return v
         if not v.exists():
             raise ValueError(f"Video file not found: {v}")
         if not v.is_file():

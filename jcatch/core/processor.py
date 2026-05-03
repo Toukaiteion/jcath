@@ -1,9 +1,11 @@
 """Main media processor that orchestrates the workflow."""
 
 from pathlib import Path
+import os
 import random
 import shutil
 import time
+import zipfile
 
 from xml.etree import ElementTree as ET
 from PIL import Image
@@ -33,31 +35,31 @@ class MediaProcessor:
             config: Processing configuration object
 
         Returns:
-            Path to the generated output directory
+            Path to the generated output directory (or zip file if zip_output=True)
 
         Raises:
-            FileNotFoundError: If video file doesn't exist (handled by validator)
             Exception: If processing fails
         """
         video_path = config.video_path
         output_dir = config.output_dir
         delete_source_file = config.delete_source
+        metadata_only = config.metadata_only
 
-        # 1. Extract movie number from file path using centralized utility or parameter key
+        # 1. Extract movie number: key has highest priority
         jav_key = getattr(config, 'key', None)
         if jav_key:
             number = str(jav_key).upper()
-        else:
+        elif video_path:
             number = extract_number_from_path(str(video_path))
             if not number:
-                # Fallback to simple stem extraction if regex patterns don't match
                 raise ValueError(f"Could not extract movie number from: {video_path}")
+        else:
+            raise ValueError("Either key or video_path must be provided")
 
         print("1/5 识别到媒体号码: " + number)
 
         # 2. Fetch metadata from scraper
         print("2/5 开始搜刮媒体源数据")
-        # Pass jav_key from config if available
         metadata = self.scraper.fetch_metadata(number)
 
         number = metadata.num
@@ -73,33 +75,41 @@ class MediaProcessor:
             print("4/5 开始生成元数据文件.nfo")
             self._generate_nfo(metadata, output_path, number)
 
-            # 5. Validate output integrity before copying video
-            print("5/6 检查输出数据完整性")
+            # 5. Validate output integrity
+            print("5/5 检查输出数据完整性")
             self._validate_output(output_path, number)
 
-            # 6. Copy video file
-            print("6/6 开始复制媒体文件，从" + str(video_path) + "复制到" + str(output_path))
-            self._copy_video(video_path, output_path, number)
+            # Skip video operations in metadata-only mode
+            if not metadata_only:
+                # Copy video file
+                print(f"开始复制媒体文件，从 {video_path} 复制到 {output_path}")
+                self._copy_video(video_path, output_path, number)
+
+                # Delete source file if requested
+                if delete_source_file and video_path.exists():
+                    try:
+                        print(f"正在删除源文件: {video_path}")
+                        video_path.unlink()
+                        print(f"✓ 已删除源文件: {video_path}")
+                    except Exception as e:
+                        print(f"⚠ 删除源文件失败: {e}")
+
+            # Zip output if requested
+            if config.zip_output:
+                print("正在压缩输出目录...")
+                zip_path = self._zip_output(output_path, number)
+                shutil.rmtree(output_path, ignore_errors=True)
+                return str(zip_path)
+
         except Exception as e:
-            # 错误处理：打印日志并删除output目录
-            error_msg = f"处理步骤3-6失败: {str(e)}"
+            error_msg = f"处理失败: {str(e)}"
             print(f"❌ {error_msg}")
             print(f"正在删除输出目录: {output_path}")
 
-            # 确保目录存在再删除
             if output_path.exists():
                 shutil.rmtree(output_path, ignore_errors=True)
 
             raise Exception(error_msg) from e
-
-        # 7. Delete source file if requested and processing was successful
-        if delete_source_file and video_path.exists():
-            try:
-                print(f"正在删除源文件: {video_path}")
-                video_path.unlink()
-                print(f"✓ 已删除源文件: {video_path}")
-            except Exception as e:
-                print(f"⚠ 删除源文件失败: {e}")
 
         return str(output_path)
 
@@ -257,3 +267,25 @@ class MediaProcessor:
             raise Exception(error_msg)
 
         print("✓ 数据完整性检查通过")
+
+    def _zip_output(self, output_dir: Path, number: str) -> Path:
+        """Zip the output directory.
+
+        Args:
+            output_dir: Directory to zip
+            number: Movie number for zip filename
+
+        Returns:
+            Path to the created zip file
+        """
+        zip_path = output_dir.parent / f"{number}.zip"
+
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, dirs, files in os.walk(output_dir):
+                for file in files:
+                    file_path = Path(root) / file
+                    arcname = file_path.relative_to(output_dir.parent)
+                    zipf.write(file_path, arcname)
+
+        print(f"✓ 已创建压缩包: {zip_path}")
+        return zip_path

@@ -109,52 +109,70 @@ def find_largest_video(directory: Path) -> Path:
     default=False,
     help="Delete source video file after successful processing",
 )
+@click.option(
+    "--zip-output",
+    "-z",
+    is_flag=True,
+    default=False,
+    help="Zip the output directory",
+)
 def main(
     video_path: Path | None,
     key: str | None,
     output: Path,
     headless: bool,
     delete_source: bool = False,
+    zip_output: bool = False,
 ) -> None:
     """Process a JAV video file and generate organized media directory.
 
     The script processes videos in these ways:
-    1. Specify video file directly: jcatch -v /path/to/video.mp4
+    1. Specify video file: jcatch -v /path/to/video.mp4
     2. Use current directory's largest video: jcatch
-    3. Override the movie number: jcatch -v video.mp4 -k ADN-174
+    3. Metadata only: jcatch -k SSNI-443 [-z]
+    4. Both video and key: jcatch -v video.mp4 -k SSNI-443 (use key, process video)
 
     Examples:
         jcatch
         jcatch -v /path/to/FSDSS-549.mp4 -o output
-        jcatch -k SSNI-443 -d
-        jcatch -v video.mp4 -o . --headless
+        jcatch -k SSNI-443
+        jcatch -k SSNI-443 -z
+        jcatch -v video.mp4 -o . -k SSNI-443
     """
     # Print all parameters before execution
     click.echo("=" * 50)
     click.echo("执行参数:")
-    click.echo(f"  video_path: {video_path if video_path else '(自动检测)'}")
+    click.echo(f"  video_path: {video_path if video_path else '(无)'}")
     click.echo(f"  key: {key if key else '(从文件名解析)'}")
     click.echo(f"  output: {output.resolve()}")
     click.echo(f"  headless: {headless}")
     click.echo(f"  delete_source: {delete_source}")
+    click.echo(f"  zip_output: {zip_output}")
     click.echo("=" * 50)
 
     try:
-        # Resolve video path: provided or find largest in current directory
-        if video_path is None:
-            video_path = find_largest_video(Path.cwd())
-            click.echo(f"Auto-detected video: {video_path}")
-
-        # Resolve key: provided or extract from filename
+        # Resolve key: use provided key (highest priority), or extract from video filename
         if key is None:
+            # Need video path to extract key
+            if video_path is None:
+                # Try to find video in current directory
+                video_path = find_largest_video(Path.cwd())
+                click.echo(f"Auto-detected video: {video_path}")
             from jcatch.utils.file import extract_number_from_path
-            extracted = extract_number_from_path(str(video_path))
-            if not extracted:
+            key = extract_number_from_path(str(video_path))
+            if not key:
                 raise ValueError(
                     f"Could not extract movie number from filename: {video_path.name}. "
                     f"Use --key to specify manually."
                 )
-            key = extracted
+
+        # Metadata-only mode: skip video operations if no video provided
+        metadata_only = video_path is None
+
+        if metadata_only:
+            click.echo("仅元数据模式：无视频文件输入，跳过视频复制和删除")
+        else:
+            click.echo(f"视频文件: {video_path}")
 
         # Get scraper
         scraper_instance = get_scraper(headless=headless)
@@ -167,11 +185,13 @@ def main(
             video_path=video_path,
             output_dir=output,
             delete_source=delete_source,
-            key=key
+            key=key,
+            metadata_only=metadata_only,
+            zip_output=zip_output,
         )
 
         # Process with config object
-        click.echo(f"Processing: {video_path}")
+        click.echo(f"Processing: {key}")
         output_dir = processor.process(config)
 
         click.echo(f"✓ Done! Output: {output_dir}")
