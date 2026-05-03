@@ -60,10 +60,10 @@ twine upload dist/*
 pip install pyinstaller
 
 # 2. 打包为单个可执行文件（包含所有依赖）
-pyinstaller --onefile --name jcatch \n    --hidden-import=selenium \n    --hidden-import=selenium.webdriver \n    --hidden-import=selenium.webdriver.chrome.service \n    --hidden-import=selenium.webdriver.chrome.options \n    --hidden-import=webdriver_manager \n    --hidden-import=webdriver_manager.chrome \n    --hidden-import=browser_cookie3 \n    jcatch/main.py
+pyinstaller --onefile --name jcatch --hidden-import=selenium --hidden-import=selenium.webdriver --hidden-import=selenium.webdriver.chrome.service --hidden-import=selenium.webdriver.chrome.options --hidden-import=webdriver_manager --hidden-import=webdriver_manager.chrome jcatch/main.py
 
 # 或者打包为目录（推荐，启动更快）
-pyinstaller --onedir --name jcatch \n    --hidden-import=selenium \n    --hidden-import=selenium.webdriver \n    --hidden-import=selenium.webdriver.chrome.service \n    --hidden-import=selenium.webdriver.chrome.options \n    --hidden-import=webdriver_manager \n    --hidden-import=webdriver_manager.chrome \n    --hidden-import=browser_cookie3 \n    jcatch/main.py
+pyinstaller --onedir --name jcatch --hidden-import=selenium --hidden-import=selenium.webdriver --hidden-import=selenium.webdriver.chrome.service --hidden-import=selenium.webdriver.chrome.options --hidden-import=webdriver_manager --hidden-import=webdriver_manager.chrome jcatch/main.py
 
 # 3. 可执行文件位置
 # 单文件模式: dist/jcatch
