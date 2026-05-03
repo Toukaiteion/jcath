@@ -12,10 +12,31 @@ JAV video metadata fetcher and organizer.
 
 ## Installation
 
+### 使用虚拟环境（推荐）
+
+```bash
+# 1. 创建虚拟环境
+python3 -m venv venv
+
+# 2. 激活虚拟环境
+# Linux/macOS:
+source venv/bin/activate
+# Windows:
+# venv\Scripts\activate
+
+# 3. 安装依赖（开发模式）
+pip install -e .
+```
+
+激活虚拟环境后，所有后续命令都应在虚拟环境中执行。
+
 ### Development Mode
 
 ```bash
-# Install in editable mode for development
+# 激活虚拟环境后
+source venv/bin/activate
+
+# 安装可编辑模式
 pip install -e .
 ```
 
@@ -55,21 +76,38 @@ twine upload dist/*
 
 打包为独立可执行文件（包含所有依赖）：
 
+### Linux / macOS
+
 ```bash
-# 1. 安装 PyInstaller
+# 1. 激活虚拟环境
+source venv/bin/activate
+
+# 2. 安装 PyInstaller
 pip install pyinstaller
 
-# 2. 打包（使用配置文件 jcatch.spec）
+# 3. 打包
 pyinstaller jcatch.spec
 
-# 3. 可执行文件位置
-# dist/jcatch
-```
-
-打包后可直接运行：
-```bash
+# 4. 运行可执行文件
 ./dist/jcatch
 ./dist/jcatch /path/to/video.mp4 -o output
+```
+
+### Windows
+
+```powershell
+# 1. 激活虚拟环境
+venv\Scripts\activate
+
+# 2. 安装 PyInstaller
+pip install pyinstaller
+
+# 3. 打包
+pyinstaller jcatch.spec
+
+# 4. 运行可执行文件
+.\dist\jcatch.exe
+.\dist\jcatch.exe C:\path\to\video.mp4 -o output
 ```
 
 **打包配置说明：**
@@ -81,7 +119,20 @@ pyinstaller jcatch.spec
 ## Usage
 
 ```bash
+# 基本用法（headless 模式，默认）
 jcatch /path/to/video.mp4 -o output
+
+# 显示浏览器窗口（非 headless 模式）
+jcatch /path/to/video.mp4 --no-headless
+
+# 仅获取元数据（不处理视频）
+jcatch -k SSNI-443
+
+# 压缩输出目录
+jcatch -k SSNI-443 -z
+
+# 处理后删除源视频
+jcatch /path/to/video.mp4 --delete-source
 ```
 
 ## Project Structure

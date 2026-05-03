@@ -2,11 +2,46 @@
 
 
 a = Analysis(
-    ['jcatch\\main.py'],
+    ['jcatch/main.py'],
     pathex=[],
     binaries=[],
     datas=[],
-    hiddenimports=['selenium', 'selenium.webdriver', 'selenium.webdriver.chrome.service', 'selenium.webdriver.chrome.options', 'webdriver_manager', 'webdriver_manager.chrome'],
+    hiddenimports=[
+        # CLI
+        'click',
+
+        # Data models
+        'pydantic',
+        'pydantic_core',
+
+        # HTTP requests
+        'requests',
+        'requests.adapters',
+
+        # HTML parsing
+        'bs4',
+        'bs4.builder',
+        'lxml',
+        'lxml._elementpath',
+
+        # Selenium
+        'selenium',
+        'selenium.webdriver',
+        'selenium.webdriver.chrome',
+        'selenium.webdriver.chrome.webdriver',
+        'selenium.webdriver.chrome.service',
+        'selenium.webdriver.chrome.options',
+        'selenium.webdriver.common.by',
+        'selenium.webdriver.support',
+        'selenium.webdriver.support.ui',
+        'selenium.webdriver.support.expected_conditions',
+        'webdriver_manager',
+        'webdriver_manager.chrome',
+
+        # Other
+        'dotenv',
+        'PIL',
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
