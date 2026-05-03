@@ -124,6 +124,7 @@ jcatch /path/to/video.mp4 -o output
 
 # 显示浏览器窗口（非 headless 模式）
 jcatch /path/to/video.mp4 --no-headless
+jcatch /path/to/video.mp4 -nh
 
 # 仅获取元数据（不处理视频）
 jcatch -k SSNI-443

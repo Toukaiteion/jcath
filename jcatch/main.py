@@ -95,18 +95,11 @@ def find_largest_video(directory: Path) -> Path:
     help="Output directory (default: current directory)",
 )
 @click.option(
-    "--headless",
-    "-H",
-    is_flag=True,
+    "--headless/--no-headless",
+    "-H/-nh",
     default=True,
     show_default=True,
     help="Headless browser mode (default: enabled)",
-)
-@click.option(
-    "--no-headless",
-    is_flag=True,
-    flag_value=False,
-    help="Show browser window (disable headless mode)",
 )
 @click.option(
     "--delete-source",
