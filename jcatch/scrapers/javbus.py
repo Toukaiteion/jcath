@@ -25,14 +25,20 @@ class JavBusScraper(BaseScraper):
 
     BASE_URL = "https://www.javbus.com"
 
-    def __init__(self):
-        """Initialize scraper with headless browser."""
+    def __init__(self, headless: bool = True):
+        """Initialize scraper with headless browser.
+
+        Args:
+            headless: Whether to run Chrome in headless mode (default: True)
+        """
+        self.headless = headless
         self.driver = self._init_driver()
 
     def _init_driver(self):
         """Initialize Chrome WebDriver with headless mode."""
         options = Options()
-        # options.add_argument("--headless")  # 无头模式
+        if self.headless:
+            options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
