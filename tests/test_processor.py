@@ -39,7 +39,7 @@ def test_processor_creates_directory_structure(tmp_path, mock_scraper, test_vide
     config = ProcessConfiguration(
         video_path=test_video,
         output_dir=tmp_path / "output",
-        delete_source=False
+        clean=False
     )
     output_dir = processor.process(config)
 
@@ -57,7 +57,7 @@ def test_processor_calls_scraper_methods(tmp_path, mock_scraper, test_video):
     config = ProcessConfiguration(
         video_path=test_video,
         output_dir=tmp_path / "output",
-        delete_source=False
+        clean=False
     )
     processor.process(config)
 
@@ -72,7 +72,7 @@ def test_processor_with_config_object(tmp_path, mock_scraper, test_video):
     config = ProcessConfiguration(
         video_path=test_video,
         output_dir=tmp_path / "output",
-        delete_source=False
+        clean=False
     )
     output_dir = processor.process(config)
 
@@ -90,7 +90,7 @@ def test_processor_with_nonexistent_file():
         config = ProcessConfiguration(
             video_path="/nonexistent/file.mp4",
             output_dir="/output",
-            delete_source=False
+            clean=False
         )
         processor.process(config)
 
@@ -112,7 +112,7 @@ def test_process_configuration_with_jav_key():
     config = ProcessConfiguration(
         video_path=Path("/tmp/test.mp4"),
         output_dir=Path("/tmp/output"),
-        delete_source=False,
+        clean=False,
         jav_key="ABP-123"
     )
 
@@ -124,7 +124,7 @@ def test_jav_key_none_by_default():
     config = ProcessConfiguration(
         video_path=Path("/tmp/test.mp4"),
         output_dir=Path("/tmp/output"),
-        delete_source=False
+        clean=False
     )
 
     assert config.jav_key is None
@@ -146,7 +146,7 @@ def test_jav_key_passed_to_scraper(tmp_path, mock_scraper, test_video):
     config = ProcessConfiguration(
         video_path=test_video,
         output_dir=tmp_path / "output",
-        delete_source=False,
+        clean=False,
         jav_key="ABP-123"
     )
 
@@ -172,7 +172,7 @@ def test_no_jav_key_passed_to_scraper(tmp_path, mock_scraper, test_video):
     config = ProcessConfiguration(
         video_path=test_video,
         output_dir=tmp_path / "output",
-        delete_source=False
+        clean=False
     )
 
     processor.process(config)

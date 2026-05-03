@@ -132,8 +132,9 @@ jcatch -k SSNI-443
 # 压缩输出目录
 jcatch -k SSNI-443 -z
 
-# 处理后删除源视频
-jcatch /path/to/video.mp4 --delete-source
+# 清理模式：成功后删除源视频，失败时清理下载的文件
+jcatch /path/to/video.mp4 --clean
+jcatch /path/to/video.mp4 -c
 ```
 
 ## Project Structure

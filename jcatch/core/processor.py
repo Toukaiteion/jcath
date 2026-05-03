@@ -42,7 +42,7 @@ class MediaProcessor:
         """
         video_path = config.video_path
         output_dir = config.output_dir
-        delete_source_file = config.delete_source
+        clean_mode = config.clean
         metadata_only = config.metadata_only
 
         # 1. Extract movie number: key has highest priority
@@ -85,8 +85,8 @@ class MediaProcessor:
                 print(f"开始复制媒体文件，从 {video_path} 复制到 {output_path}")
                 self._copy_video(video_path, output_path, number)
 
-                # Delete source file if requested
-                if delete_source_file and video_path.exists():
+                # Delete source file if clean mode
+                if clean_mode and video_path.exists():
                     try:
                         print(f"正在删除源文件: {video_path}")
                         video_path.unlink()
@@ -104,16 +104,18 @@ class MediaProcessor:
         except Exception as e:
             error_msg = f"处理失败: {str(e)}"
             print(f"❌ {error_msg}")
-            print(f"正在删除输出目录: {output_path}")
 
-            if output_path.exists():
-                shutil.rmtree(output_path, ignore_errors=True)
+            # Only clean up output directory if clean mode is enabled
+            if clean_mode:
+                print(f"正在删除输出目录: {output_path}")
+                if output_path.exists():
+                    shutil.rmtree(output_path, ignore_errors=True)
 
             raise Exception(error_msg) from e
 
         return str(output_path)
 
-    def process_from_params(self, video_path: str | Path, output_dir: str | Path = "output", delete_source: bool = False) -> str:
+    def process_from_params(self, video_path: str | Path, output_dir: str | Path = "output", clean: bool = False) -> str:
         """Process with individual parameters (backward compatibility).
 
         This method maintains backward compatibility with existing code.
@@ -121,7 +123,7 @@ class MediaProcessor:
         Args:
             video_path: Path to the input video file
             output_dir: Base directory for output (default: "output")
-            delete_source: If True, delete the source file after successful processing (default: False)
+            clean: If True, clean mode (delete source on success, clean output on failure, default: False)
 
         Returns:
             Path to the generated output directory
@@ -129,7 +131,7 @@ class MediaProcessor:
         config = ProcessConfiguration(
             video_path=Path(video_path),
             output_dir=Path(output_dir),
-            delete_source=delete_source
+            clean=clean
         )
         return self.process(config)
 

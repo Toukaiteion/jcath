@@ -102,11 +102,11 @@ def find_largest_video(directory: Path) -> Path:
     help="Headless browser mode (default: enabled)",
 )
 @click.option(
-    "--delete-source",
-    "-d",
+    "--clean",
+    "-c",
     is_flag=True,
     default=False,
-    help="Delete source video file after successful processing",
+    help="Clean mode: delete source video on success, and clean up downloaded files on failure",
 )
 @click.option(
     "--zip-output",
@@ -120,7 +120,7 @@ def main(
     key: str | None,
     output: Path,
     headless: bool,
-    delete_source: bool = False,
+    clean: bool = False,
     zip_output: bool = False,
 ) -> None:
     """Process a JAV video file and generate organized media directory.
@@ -145,7 +145,7 @@ def main(
     click.echo(f"  key: {key if key else '(从文件名解析)'}")
     click.echo(f"  output: {output.resolve()}")
     click.echo(f"  headless: {headless}")
-    click.echo(f"  delete_source: {delete_source}")
+    click.echo(f"  clean: {clean}")
     click.echo(f"  zip_output: {zip_output}")
     click.echo("=" * 50)
 
@@ -183,7 +183,7 @@ def main(
         config = ProcessConfiguration(
             video_path=video_path,
             output_dir=output,
-            delete_source=delete_source,
+            clean=clean,
             key=key,
             metadata_only=metadata_only,
             zip_output=zip_output,

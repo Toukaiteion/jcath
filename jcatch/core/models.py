@@ -58,7 +58,7 @@ class ProcessConfiguration(BaseModel):
 
     video_path: Path | None = Field(default=None, description="Path to input video file (optional for metadata-only mode)")
     output_dir: Path = Field(default="output", description="Base output directory")
-    delete_source: bool = Field(default=False, description="Delete source file after processing")
+    clean: bool = Field(default=False, description="Clean mode: delete source on success, clean output on failure")
     key: str | None = Field(default=None, description="Movie number for scraping (e.g., 'FSDSS-549')")
     metadata_only: bool = Field(default=False, description="Only generate metadata, skip video operations")
     zip_output: bool = Field(default=False, description="Zip the output directory")
