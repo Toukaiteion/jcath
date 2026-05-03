@@ -2,24 +2,11 @@
 
 
 a = Analysis(
-    ['jcatch/main.py'],
+    ['jcatch\\main.py'],
     pathex=[],
     binaries=[],
     datas=[],
-    hiddenimports=[
-        'selenium',
-        'selenium.webdriver',
-        'selenium.webdriver.chrome',
-        'selenium.webdriver.chrome.webdriver',
-        'selenium.webdriver.chrome.service',
-        'selenium.webdriver.chrome.options',
-        'selenium.webdriver.common.by',
-        'selenium.webdriver.support',
-        'selenium.webdriver.support.ui',
-        'selenium.webdriver.support.expected_conditions',
-        'webdriver_manager',
-        'webdriver_manager.chrome',
-    ],
+    hiddenimports=['selenium', 'selenium.webdriver', 'selenium.webdriver.chrome.service', 'selenium.webdriver.chrome.options', 'webdriver_manager', 'webdriver_manager.chrome'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

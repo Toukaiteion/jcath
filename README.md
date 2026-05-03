@@ -59,31 +59,22 @@ twine upload dist/*
 # 1. 安装 PyInstaller
 pip install pyinstaller
 
-# 2. 打包为单个可执行文件（包含所有依赖）
-pyinstaller --onefile --name jcatch --hidden-import=selenium --hidden-import=selenium.webdriver --hidden-import=selenium.webdriver.chrome.service --hidden-import=selenium.webdriver.chrome.options --hidden-import=webdriver_manager --hidden-import=webdriver_manager.chrome jcatch/main.py
-
-# 或者打包为目录（推荐，启动更快）
-pyinstaller --onedir --name jcatch --hidden-import=selenium --hidden-import=selenium.webdriver --hidden-import=selenium.webdriver.chrome.service --hidden-import=selenium.webdriver.chrome.options --hidden-import=webdriver_manager --hidden-import=webdriver_manager.chrome jcatch/main.py
+# 2. 打包（使用配置文件 jcatch.spec）
+pyinstaller jcatch.spec
 
 # 3. 可执行文件位置
-# 单文件模式: dist/jcatch
-# 目录模式: dist/jcatch/jcatch
+# dist/jcatch
 ```
 
 打包后可直接运行：
 ```bash
 ./dist/jcatch
-./dist/jcatch -v /path/to/video.mp4 -o output
+./dist/jcatch /path/to/video.mp4 -o output
 ```
 
-**打包参数说明：**
+**打包配置说明：**
 
-| 参数 | 说明 |
-|------|------|
-| `--onefile` | 打包为单个可执行文件（体积较大，启动较慢） |
-| `--onedir` | 打包为目录（推荐，启动更快） |
-| `--name jcatch` | 指定可执行文件名称 |
-| `--hidden-import` | 显式指定需要打包的隐藏导入模块（selenium 等） |
+打包配置保存在 `jcatch.spec` 文件中，包含 Selenium 等依赖的隐藏导入设置。
 
 > **注意**：首次运行打包后的可执行文件时，webdriver-manager 会自动下载 ChromeDriver 到用户目录。
 
