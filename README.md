@@ -51,6 +51,39 @@ python -m build
 twine upload dist/*
 ```
 
+## PyInstaller 打包
+
+打包为独立可执行文件（包含所有依赖）：
+
+```bash
+# 1. 安装 PyInstaller
+pip install pyinstaller
+
+# 2. 打包为单个可执行文件
+pyinstaller --onefile --name jcatch jcatch/main.py
+
+# 或者打包为目录（推荐，启动更快）
+pyinstaller --onedir --name jcatch jcatch/main.py
+
+# 3. 可执行文件位置
+# 单文件模式: dist/jcatch
+# 目录模式: dist/jcatch/jcatch
+```
+
+打包后可直接运行：
+```bash
+./dist/jcatch
+./dist/jcatch -v /path/to/video.mp4 -o output
+```
+
+**打包参数说明：**
+
+| 参数 | 说明 |
+|------|------|
+| `--onefile` | 打包为单个可执行文件（体积较大，启动较慢） |
+| `--onedir` | 打包为目录（推荐，启动更快） |
+| `--name jcatch` | 指定可执行文件名称 |
+
 ## Usage
 
 ```bash
