@@ -25,13 +25,15 @@ class JavBusScraper(BaseScraper):
 
     BASE_URL = "https://www.javbus.com"
 
-    def __init__(self, headless: bool = True):
+    def __init__(self, headless: bool = True, chromedriver_path: str | None = None):
         """Initialize scraper with headless browser.
 
         Args:
             headless: Whether to run Chrome in headless mode (default: True)
+            chromedriver_path: Path to ChromeDriver executable. If None, use webdriver-manager to install.
         """
         self.headless = headless
+        self.chromedriver_path = chromedriver_path
         self.driver = self._init_driver()
 
     def _init_driver(self):
@@ -54,8 +56,15 @@ class JavBusScraper(BaseScraper):
             options.binary_location = chrome_path
             print(f"Chrome 路径: {chrome_path}")
 
-        service = Service(ChromeDriverManager().install())
-        print("download driver at: " + ChromeDriverManager().install())
+        # Use provided chromedriver_path or install via webdriver-manager
+        if self.chromedriver_path:
+            service = Service(self.chromedriver_path)
+            print(f"使用指定 ChromeDriver: {self.chromedriver_path}")
+        else:
+            driver_path = ChromeDriverManager().install()
+            print("download driver at: " + driver_path)
+            service = Service(driver_path)
+
         driver = webdriver.Chrome(service=service, options=options)
 
         # Print Chrome version info

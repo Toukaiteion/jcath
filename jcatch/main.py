@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from jcatch.scrapers.base import BaseScraper
 
 
-def get_scraper(headless: bool = True) -> "BaseScraper":
+def get_scraper(headless: bool = True, chromedriver_path: str | None = None) -> "BaseScraper":
     """Get the configured scraper instance.
 
     You can combine scrapers using decorators to get metadata from one source
@@ -36,12 +36,13 @@ def get_scraper(headless: bool = True) -> "BaseScraper":
 
     Args:
         headless: Whether to run Chrome in headless mode (default: True)
+        chromedriver_path: Path to ChromeDriver executable (optional)
 
     Returns:
         Configured BaseScraper instance
     """
     # Default: use JavBus for everything
-    base = JavBusScraper(headless=headless)
+    base = JavBusScraper(headless=headless, chromedriver_path=chromedriver_path)
     with_poster = PosterDecorator(base, Www324JavScraper())
     with_poster = PosterDecorator(with_poster, JavWineScraper())
     return with_poster
@@ -115,6 +116,13 @@ def find_largest_video(directory: Path) -> Path:
     default=False,
     help="Zip the output directory",
 )
+@click.option(
+    "--chromedriver-path",
+    "-d",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to ChromeDriver executable (optional, uses webdriver-manager if not specified)",
+)
 def main(
     video_path: Path | None,
     key: str | None,
@@ -122,6 +130,7 @@ def main(
     headless: bool,
     clean: bool = False,
     zip_output: bool = False,
+    chromedriver_path: Path | None = None,
 ) -> None:
     """Process a JAV video file and generate organized media directory.
 
@@ -137,6 +146,7 @@ def main(
         jcatch -k SSNI-443
         jcatch -k SSNI-443 -z
         jcatch -v video.mp4 -o . -k SSNI-443
+        jcatch -k SSNI-443 -d /path/to/chromedriver
     """
     # Print all parameters before execution
     click.echo("=" * 50)
@@ -147,6 +157,7 @@ def main(
     click.echo(f"  headless: {headless}")
     click.echo(f"  clean: {clean}")
     click.echo(f"  zip_output: {zip_output}")
+    click.echo(f"  chromedriver_path: {chromedriver_path if chromedriver_path else '(自动安装)'}")
     click.echo("=" * 50)
 
     try:
@@ -174,7 +185,8 @@ def main(
             click.echo(f"视频文件: {video_path}")
 
         # Get scraper
-        scraper_instance = get_scraper(headless=headless)
+        chromedriver_path_str = str(chromedriver_path) if chromedriver_path else None
+        scraper_instance = get_scraper(headless=headless, chromedriver_path=chromedriver_path_str)
 
         # Create processor
         processor = MediaProcessor(scraper_instance)
