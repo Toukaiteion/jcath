@@ -24,7 +24,7 @@ class MediaProcessor:
 
     # Extrafanart download validation thresholds
     MIN_EXTRA_FANART_COUNT = 6  # Minimum required images
-    MIN_SUCCESS_RATE = 0.8     # Minimum success rate (75%)
+    MIN_SUCCESS_RATE = 0.75     # Minimum success rate (75%)
 
     def __init__(self, scraper: BaseScraper):
         """Initialize processor with a scraper instance.
