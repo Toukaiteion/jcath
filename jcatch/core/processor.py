@@ -187,9 +187,12 @@ class MediaProcessor:
             if not self._validate_extrafanart_download(success_count, total_count):
                 print("初次下载截图未达到要求，尝试备用源...")
                 # Fallback to JavTrailers
-                self._try_fallback_extrafanart(
+                fallback_success_count = self._try_fallback_extrafanart(
                     metadata.num, extra_dir, start_index=total_count + 1
                 )
+                # If fallback also failed, raise exception
+                if fallback_success_count == 0:
+                    raise Exception(f"截图下载失败: 初次 {success_count}/{total_count}，备用源 0")
 
     def _download_extrafanart_with_validation(
         self,
@@ -284,10 +287,10 @@ class MediaProcessor:
             # Validate fallback download
             if self._validate_extrafanart_download(success_count, total_count):
                 print(f"备用源截图下载成功: {success_count} 张")
+                return success_count
             else:
                 print(f"备用源截图下载未达到要求: {success_count}/{total_count}")
-
-            return success_count
+                return 0  # Return 0 to indicate failure
 
         except Exception as e:
             print(f"备用源下载失败: {e}")
