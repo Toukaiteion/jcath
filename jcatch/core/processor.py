@@ -11,14 +11,20 @@ from xml.etree import ElementTree as ET
 from PIL import Image
 
 from jcatch.scrapers.base import BaseScraper
+from jcatch.scrapers import JavTrailersScraper
 from jcatch.core.models import MovieMetadata, ProcessConfiguration
 from jcatch.core.nfo import generate_nfo
 from jcatch.utils.downloader import ImageDownloader
 from jcatch.utils.file import extract_number_from_path
+from jcatch.core.models import ImageUrl
 
 
 class MediaProcessor:
     """Process video files and generate complete media directory structure."""
+
+    # Extrafanart download validation thresholds
+    MIN_EXTRA_FANART_COUNT = 6  # Minimum required images
+    MIN_SUCCESS_RATE = 0.8     # Minimum success rate (75%)
 
     def __init__(self, scraper: BaseScraper):
         """Initialize processor with a scraper instance.
@@ -172,9 +178,120 @@ class MediaProcessor:
             extra_dir = output_dir / "extrafanart"
             extra_dir.mkdir(exist_ok=True)
 
-            for i, image in enumerate(metadata.extrafanart, start=1):
-                ImageDownloader.download(image, extra_dir / f"extrafanart-{i}.jpg")
+            # Initial download attempt
+            success_count, total_count = self._download_extrafanart_with_validation(
+                metadata.extrafanart, extra_dir
+            )
+
+            # Check if validation passed
+            if not self._validate_extrafanart_download(success_count, total_count):
+                print("初次下载截图未达到要求，尝试备用源...")
+                # Fallback to JavTrailers
+                self._try_fallback_extrafanart(
+                    metadata.num, extra_dir, start_index=total_count + 1
+                )
+
+    def _download_extrafanart_with_validation(
+        self,
+        images: list[ImageUrl],
+        output_dir: Path,
+        start_index: int = 1
+    ) -> tuple[int, int]:
+        """Download extrafanart images and track success.
+
+        Args:
+            images: List of ImageUrl objects to download
+            output_dir: Directory to save images
+            start_index: Starting index for filename (default: 1)
+
+        Returns:
+            Tuple of (successful_count, total_count)
+        """
+        success_count = 0
+        total_count = len(images)
+
+        for i, image in enumerate(images, start=start_index):
+            try:
+                ImageDownloader.download(image, output_dir / f"extrafanart-{i}.jpg")
+                success_count += 1
                 time.sleep(random.uniform(2, 8))
+            except Exception as e:
+                print(f"截图下载失败 extrafanart-{i}: {e}")
+                continue
+
+        # Log success rate
+        success_rate = (success_count / total_count * 100) if total_count > 0 else 0
+        print(f"截图下载完成: 成功 {success_count}/{total_count} ({success_rate:.1f}%)")
+
+        return success_count, total_count
+
+    def _validate_extrafanart_download(
+        self,
+        success_count: int,
+        total_count: int
+    ) -> bool:
+        """Validate if extrafanart download meets requirements.
+
+        Args:
+            success_count: Number of successfully downloaded images
+            total_count: Total number of images attempted
+
+        Returns:
+            True if validation passed, False otherwise
+        """
+        if total_count == 0:
+            return False
+
+        success_rate = success_count / total_count
+
+        # Check both minimum count and success rate
+        meets_count = success_count >= self.MIN_EXTRA_FANART_COUNT
+        meets_rate = success_rate >= self.MIN_SUCCESS_RATE
+
+        return meets_count and meets_rate
+
+    def _try_fallback_extrafanart(
+        self,
+        number: str,
+        output_dir: Path,
+        start_index: int
+    ) -> int:
+        """Try to download extrafanart from fallback scraper.
+
+        Args:
+            number: Movie number
+            output_dir: Directory to save images
+            start_index: Starting index for filename
+
+        Returns:
+            Number of successfully downloaded images from fallback
+        """
+        try:
+            # Initialize fallback scraper
+            print(f"使用 JavTrailers 获取备用截图...")
+            fallback_scraper = JavTrailersScraper(headless=True)
+            fallback_metadata = fallback_scraper.fetch_metadata(number)
+
+            if not fallback_metadata.extrafanart:
+                print("备用源未找到截图")
+                return 0
+
+            # Download fallback images
+            success_count, total_count = self._download_extrafanart_with_validation(
+                fallback_metadata.extrafanart, output_dir, start_index
+            )
+
+            # Validate fallback download
+            if self._validate_extrafanart_download(success_count, total_count):
+                print(f"备用源截图下载成功: {success_count} 张")
+            else:
+                print(f"备用源截图下载未达到要求: {success_count}/{total_count}")
+
+            return success_count
+
+        except Exception as e:
+            print(f"备用源下载失败: {e}")
+            return 0
 
     def _generate_nfo(self, metadata: MovieMetadata, output_dir: Path, number: str) -> None:
         """Generate NFO file.
