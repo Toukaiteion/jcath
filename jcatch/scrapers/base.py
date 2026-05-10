@@ -30,3 +30,16 @@ class BaseScraper(ABC):
             "FSDSS-549-「上司からここに来るように言われました」..."
         """
         pass
+
+    def get_config(self) -> dict:
+        """Get scraper configuration for fallback use.
+
+        Returns:
+            Dict containing 'headless' and 'chromedriver_path' keys if available
+        """
+        config = {}
+        if hasattr(self, 'headless'):
+            config['headless'] = self.headless
+        if hasattr(self, 'chromedriver_path'):
+            config['chromedriver_path'] = self.chromedriver_path
+        return config

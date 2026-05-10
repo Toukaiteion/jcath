@@ -280,9 +280,13 @@ class MediaProcessor:
             Number of successfully downloaded images from fallback
         """
         try:
-            # Initialize fallback scraper
+            # Initialize fallback scraper with main scraper's config
             print(f"使用 JavTrailers 获取备用截图...")
-            fallback_scraper = JavTrailersScraper(headless=True)
+            config = self.scraper.get_config()
+            fallback_scraper = JavTrailersScraper(
+                headless=config.get('headless', True),
+                chromedriver_path=config.get('chromedriver_path')
+            )
             fallback_metadata = fallback_scraper.fetch_metadata(number)
 
             if not fallback_metadata.extrafanart:
