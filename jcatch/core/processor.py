@@ -23,8 +23,8 @@ class MediaProcessor:
     """Process video files and generate complete media directory structure."""
 
     # Extrafanart download validation thresholds
-    MIN_EXTRA_FANART_COUNT = 6  # Minimum required images
-    MIN_SUCCESS_RATE = 0.75     # Minimum success rate (75%)
+    MIN_EXTRA_FANART_COUNT = 8  # Minimum required images
+    MIN_SUCCESS_RATE = 0.8     # Minimum success rate (75%)
 
     def __init__(self, scraper: BaseScraper):
         """Initialize processor with a scraper instance.
@@ -73,13 +73,13 @@ class MediaProcessor:
         output_path.mkdir(parents=True, exist_ok=True)
 
         try:
-            # 3. Download and save images
-            print("3/5 开始下载图片资源")
-            self._download_images(metadata, output_path, number)
-
-            # 4. Generate NFO file
-            print("4/5 开始生成元数据文件.nfo")
+            # 3. Generate NFO file
+            print("3/5 开始生成元数据文件.nfo")
             self._generate_nfo(metadata, output_path, number)
+
+            # 4. Download and save images
+            print("4/5 开始下载图片资源")
+            self._download_images(metadata, output_path, number)
 
             # 5. Validate output integrity
             print("5/5 检查输出数据完整性")
@@ -163,15 +163,18 @@ class MediaProcessor:
         # Main images
         if metadata.poster.url:
             ImageDownloader.download(metadata.poster, output_dir / f"{number}-poster.jpg")
-            time.sleep(random.uniform(2, 8))
+            print("✅️已下载poster")
+            time.sleep(random.uniform(1, 5))
 
         if metadata.thumb.url:
             ImageDownloader.download(metadata.thumb, output_dir / f"{number}-thumb.jpg")
-            time.sleep(random.uniform(2, 8))
+            print("✅️已下载thumb")
+            time.sleep(random.uniform(1, 5))
 
         if metadata.fanart.url:
             ImageDownloader.download(metadata.fanart, output_dir / f"{number}-fanart.jpg")
-            time.sleep(random.uniform(2, 8))
+            print("✅️已下载fanart")
+            time.sleep(random.uniform(1, 5))
 
         # If poster URL is empty, crop fanart to create poster
         if not metadata.poster.url:
@@ -258,7 +261,7 @@ class MediaProcessor:
         meets_count = success_count >= self.MIN_EXTRA_FANART_COUNT
         meets_rate = success_rate >= self.MIN_SUCCESS_RATE
 
-        return meets_count and meets_rate
+        return meets_count or meets_rate
 
     def _try_fallback_extrafanart(
         self,
