@@ -17,6 +17,7 @@ from jcatch.core.nfo import generate_nfo
 from jcatch.utils.downloader import ImageDownloader
 from jcatch.utils.file import extract_number_from_path
 from jcatch.core.models import ImageUrl
+from jcatch.utils.logger import log_step, log_sub_step, log_success, log_error, setup_root_logger
 
 
 class MediaProcessor:
@@ -33,6 +34,7 @@ class MediaProcessor:
             scraper: Scraper instance for fetching metadata and images
         """
         self.scraper = scraper
+        setup_root_logger()  # 确保日志系统已配置
 
     def process(self, config: ProcessConfiguration) -> str:
         """Process a video file and generate complete directory structure.
@@ -62,10 +64,10 @@ class MediaProcessor:
         else:
             raise ValueError("Either key or video_path must be provided")
 
-        print("1/5 识别到媒体号码: " + number)
+        log_step(1, 5, f"识别到媒体号码: {number}")
 
         # 2. Fetch metadata from scraper
-        print("2/5 开始搜刮媒体源数据")
+        log_step(2, 5, "开始搜刮媒体源数据")
         metadata = self.scraper.fetch_metadata(number)
 
         number = metadata.num
@@ -74,45 +76,45 @@ class MediaProcessor:
 
         try:
             # 3. Generate NFO file
-            print("3/5 开始生成元数据文件.nfo")
+            log_step(3, 5, "开始生成元数据文件.nfo")
             self._generate_nfo(metadata, output_path, number)
 
             # 4. Download and save images
-            print("4/5 开始下载图片资源")
+            log_step(4, 5, "开始下载图片资源")
             self._download_images(metadata, output_path, number)
 
             # 5. Validate output integrity
-            print("5/5 检查输出数据完整性")
+            log_step(5, 5, "检查输出数据完整性")
             self._validate_output(output_path, number)
 
             # Skip video operations in metadata-only mode
             if not metadata_only:
                 # Copy video file
-                print(f"开始复制媒体文件，从 {video_path} 复制到 {output_path}")
+                log_sub_step(f"复制媒体文件: {video_path} → {output_path}")
                 self._copy_video(video_path, output_path, number)
 
                 # Delete source file if clean mode
                 if clean_mode and video_path.exists():
                     try:
-                        print(f"正在删除源文件: {video_path}")
+                        log_sub_step(f"删除源文件: {video_path}")
                         video_path.unlink()
-                        print(f"✓ 已删除源文件: {video_path}")
+                        log_success(f"已删除源文件: {video_path}")
                     except Exception as e:
-                        print(f"⚠ 删除源文件失败: {e}")
+                        log_error(f"删除源文件失败: {e}")
 
             # Zip output if requested
             if config.zip_output:
-                print("正在压缩输出目录...")
+                log_sub_step("压缩输出目录...")
                 zip_path = self._zip_output(output_path, number)
                 return str(zip_path)
 
         except Exception as e:
             error_msg = f"处理失败: {str(e)}"
-            print(f"❌ {error_msg}")
+            log_error(error_msg)
 
             # Only clean up output directory if clean mode is enabled
             if clean_mode:
-                print(f"正在删除输出目录: {output_path}")
+                log_sub_step(f"删除输出目录: {output_path}")
                 if output_path.exists():
                     shutil.rmtree(output_path, ignore_errors=True)
 
@@ -162,25 +164,25 @@ class MediaProcessor:
         """
         # Main images
         if metadata.poster.url:
+            log_sub_step(f"下载 poster: {number}-poster.jpg")
             ImageDownloader.download(metadata.poster, output_dir / f"{number}-poster.jpg")
-            print("✅️已下载poster")
             time.sleep(random.uniform(1, 5))
 
         if metadata.thumb.url:
+            log_sub_step(f"下载 thumb: {number}-thumb.jpg")
             ImageDownloader.download(metadata.thumb, output_dir / f"{number}-thumb.jpg")
-            print("✅️已下载thumb")
             time.sleep(random.uniform(1, 5))
 
         if metadata.fanart.url:
+            log_sub_step(f"下载 fanart: {number}-fanart.jpg")
             ImageDownloader.download(metadata.fanart, output_dir / f"{number}-fanart.jpg")
-            print("✅️已下载fanart")
             time.sleep(random.uniform(1, 5))
 
         # If poster URL is empty, crop fanart to create poster
         if not metadata.poster.url:
             fanart_file = output_dir / f"{number}-fanart.jpg"
             if fanart_file.exists():
-                print("Poster URL为空，尝试从fanart裁剪生成...")
+                log_sub_step("Poster URL为空，从 fanart 裁剪生成...")
                 self._crop_fanart_to_poster(output_dir, number)
 
         # Extra fanart screenshots
@@ -189,13 +191,14 @@ class MediaProcessor:
             extra_dir.mkdir(exist_ok=True)
 
             # Initial download attempt
+            log_sub_step(f"下载截图 ({len(metadata.extrafanart)} 张)")
             success_count, total_count = self._download_extrafanart_with_validation(
                 metadata.extrafanart, extra_dir
             )
 
             # Check if validation passed
             if not self._validate_extrafanart_download(success_count, total_count):
-                print("初次下载截图未达到要求，尝试备用源...")
+                log_sub_step("初次下载截图未达到要求，尝试备用源...")
                 # Fallback to JavTrailers
                 fallback_success_count = self._try_fallback_extrafanart(
                     metadata.num, extra_dir, start_index=total_count + 1
@@ -229,12 +232,12 @@ class MediaProcessor:
                 success_count += 1
                 time.sleep(random.uniform(2, 8))
             except Exception as e:
-                print(f"截图下载失败 extrafanart-{i}: {e}")
+                log_error(f"截图下载失败 extrafanart-{i}: {e}")
                 continue
 
         # Log success rate
         success_rate = (success_count / total_count * 100) if total_count > 0 else 0
-        print(f"截图下载完成: 成功 {success_count}/{total_count} ({success_rate:.1f}%)")
+        log_success(f"截图下载完成: 成功 {success_count}/{total_count} ({success_rate:.1f}%)")
 
         return success_count, total_count
 
@@ -281,7 +284,7 @@ class MediaProcessor:
         """
         try:
             # Initialize fallback scraper with main scraper's config
-            print(f"使用 JavTrailers 获取备用截图...")
+            log_sub_step("使用 JavTrailers 获取备用截图...")
             config = self.scraper.get_config()
             fallback_scraper = JavTrailersScraper(
                 headless=config.get('headless', True),
@@ -290,7 +293,7 @@ class MediaProcessor:
             fallback_metadata = fallback_scraper.fetch_metadata(number)
 
             if not fallback_metadata.extrafanart:
-                print("备用源未找到截图")
+                log_error("备用源未找到截图")
                 return 0
 
             # Download fallback images
@@ -300,14 +303,14 @@ class MediaProcessor:
 
             # Validate fallback download
             if self._validate_extrafanart_download(success_count, total_count):
-                print(f"备用源截图下载成功: {success_count} 张")
+                log_success(f"备用源截图下载成功: {success_count} 张")
                 return success_count
             else:
-                print(f"备用源截图下载未达到要求: {success_count}/{total_count}")
+                log_error(f"备用源截图下载未达到要求: {success_count}/{total_count}")
                 return 0  # Return 0 to indicate failure
 
         except Exception as e:
-            print(f"备用源下载失败: {e}")
+            log_error(f"备用源下载失败: {e}")
             return 0
 
     def _crop_fanart_to_poster(self, output_dir: Path, number: str) -> None:
@@ -323,7 +326,7 @@ class MediaProcessor:
         fanart_file = output_dir / f"{number}-fanart.jpg"
 
         if not fanart_file.exists():
-            print(f"Fanart文件不存在，跳过裁剪: {fanart_file}")
+            log_error(f"Fanart文件不存在，跳过裁剪: {fanart_file}")
             return None
 
         try:
@@ -336,11 +339,11 @@ class MediaProcessor:
                     right_half = img.crop((width - crop_width, 0, width, height))
                     poster_path = output_dir / f"{number}-poster.jpg"
                     right_half.save(poster_path, quality=95)
-                    print(f"✓ 从fanart裁剪生成poster: {width}x{height} -> {crop_width}x{height}")
+                    log_success(f"从 fanart 裁剪生成 poster: {width}x{height} → {crop_width}x{height}")
                 else:
-                    print(f"Fanart宽度不足700px ({width})，跳过裁剪")
+                    log_sub_step(f"Fanart 宽度不足 700px ({width})，跳过裁剪")
         except Exception as e:
-            print(f"裁剪fanart生成poster失败: {e}")
+            log_error(f"裁剪 fanart 生成 poster 失败: {e}")
 
     def _generate_nfo(self, metadata: MovieMetadata, output_dir: Path, number: str) -> None:
         """Generate NFO file.
@@ -389,7 +392,7 @@ class MediaProcessor:
         if not poster_file.exists():
             # 检查fanart是否存在且宽度大于700px，如果满足则裁剪作为poster
             if fanart_file.exists():
-                print("验证时poster不存在，尝试从fanart裁剪生成...")
+                log_sub_step("验证时 poster 不存在，尝试从 fanart 裁剪生成...")
                 self._crop_fanart_to_poster(output_dir, number)
                 # 再次检查
                 if not poster_file.exists():
@@ -418,12 +421,12 @@ class MediaProcessor:
         # 3. If any resources missing, clean up and raise error
         if missing:
             error_msg = "数据完整性检查失败，缺少资源: " + ", ".join(missing)
-            print(f"❌ {error_msg}")
-            print(f"正在删除输出目录: {output_dir}")
+            log_error(error_msg)
+            log_sub_step(f"删除输出目录: {output_dir}")
             shutil.rmtree(output_dir, ignore_errors=True)
             raise Exception(error_msg)
 
-        print("✓ 数据完整性检查通过")
+        log_success("数据完整性检查通过")
 
     def _zip_output(self, output_dir: Path, number: str) -> Path:
         """Zip the output directory (metadata only, excludes videos and large files).
@@ -454,14 +457,14 @@ class MediaProcessor:
                     # Skip large files (>1GB)
                     if file_path.stat().st_size > large_file_threshold:
                         excluded_count += 1
-                        print(f"  跳过大文件 (>1GB): {file.name}")
+                        log_sub_step(f"跳过大文件 (>1GB): {file.name}")
                         continue
 
                     arcname = file_path.relative_to(output_dir.parent)
                     zipf.write(file_path, arcname)
 
         if excluded_count > 0:
-            print(f"  已跳过 {excluded_count} 个文件")
+            log_sub_step(f"已跳过 {excluded_count} 个文件")
 
-        print(f"✓ 已创建压缩包: {zip_path}")
+        log_success(f"已创建压缩包: {zip_path}")
         return zip_path

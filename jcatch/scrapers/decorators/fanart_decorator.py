@@ -2,6 +2,9 @@
 
 from jcatch.core.models import ImageUrl, MovieMetadata
 from jcatch.scrapers.decorators.base_decorator import ScraperDecorator
+from jcatch.utils.logger import setup_logger
+
+logger = setup_logger(__name__)
 
 
 class FanartDecorator(ScraperDecorator):
@@ -50,9 +53,9 @@ class FanartDecorator(ScraperDecorator):
         # First try: call fanart_scraper
         result = self._call_fanart_scraper(number)
 
-        # Chain retry: if empty, print log and note for retry
+        # Chain retry: if empty, log and note for retry
         if not result.url:
-            print(f"[{self.__class__.__name__}] Fanart empty, next decorator should retry")
+            logger.debug(f"{self.__class__.__name__} Fanart 为空, 下一个装饰器重试")
 
         return result
 
@@ -71,5 +74,5 @@ class FanartDecorator(ScraperDecorator):
                 metadata = self.fanart_scraper.fetch_metadata(number)
                 return metadata.fanart
         except Exception as e:
-            print(f"[{self.__class__.__name__}] Fanart scraper error: {e}")
+            logger.error(f"{self.__class__.__name__} Fanart 搜刮器错误: {e}")
             return ImageUrl(url="")

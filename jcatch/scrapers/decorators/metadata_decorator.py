@@ -2,6 +2,9 @@
 
 from jcatch.core.models import MovieMetadata
 from jcatch.scrapers.decorators.base_decorator import ScraperDecorator
+from jcatch.utils.logger import setup_logger
+
+logger = setup_logger(__name__)
 
 
 class MetadataDecorator(ScraperDecorator):
@@ -32,7 +35,7 @@ class MetadataDecorator(ScraperDecorator):
 
         # Check if any key fields are empty
         if self._needs_backup(metadata):
-            print(f"[{self.__class__.__name__}] Some fields empty, fetching from backup")
+            logger.debug(f"{self.__class__.__name__} 部分字段为空, 从备用源获取")
             backup_metadata = self._fetch_backup(number)
             metadata = self._merge_metadata(metadata, backup_metadata)
 
@@ -61,7 +64,7 @@ class MetadataDecorator(ScraperDecorator):
         try:
             return self.backup_scraper.fetch_metadata(number)
         except Exception as e:
-            print(f"[{self.__class__.__name__}] Backup scraper error: {e}")
+            logger.error(f"{self.__class__.__name__} 备用搜刮器错误: {e}")
             return MovieMetadata()
 
     def _merge_metadata(

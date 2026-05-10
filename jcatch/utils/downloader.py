@@ -7,6 +7,9 @@ import time
 import requests
 
 from jcatch.core.models import ImageUrl
+from jcatch.utils.logger import setup_logger
+
+logger = setup_logger(__name__)
 
 
 class ImageDownloader:
@@ -32,7 +35,7 @@ class ImageDownloader:
 
         # Check cache first
         if image.url in ImageDownloader._cache:
-            print(f"[缓存命中] {save_path.name}")
+            logger.debug(f"缓存命中: {save_path.name}")
             save_path.write_bytes(ImageDownloader._cache[image.url])
             return
 
@@ -49,21 +52,22 @@ class ImageDownloader:
 
                 # Write to file
                 save_path.write_bytes(content)
-                print(f"[下载成功] {save_path.name}")
+                logger.info(f"下载成功: {save_path.name}")
                 return
             except Exception as e:
                 last_error = e
                 if attempt < max_retries - 1:
                     # Exponential backoff: 1s, 2s, 4s
                     delay = 2 ** attempt
-                    print(f"[重试 {attempt + 1}/{max_retries}] {save_path.name}, 延迟 {delay}s")
+                    logger.warning(f"重试 {attempt + 1}/{max_retries}, {save_path.name}, 延迟 {delay}s")
                     time.sleep(delay)
 
         # All retries failed
+        logger.error(f"下载失败: {image.url}, 错误: {last_error}")
         raise Exception(f"Failed to download {image.url} after {max_retries} attempts: {last_error}")
 
     @classmethod
     def clear_cache(cls) -> None:
         """Clear in-memory cache."""
         cls._cache.clear()
-        print("[缓存已清空]")
+        logger.info("缓存已清空")
