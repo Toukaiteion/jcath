@@ -173,6 +173,13 @@ class MediaProcessor:
             ImageDownloader.download(metadata.fanart, output_dir / f"{number}-fanart.jpg")
             time.sleep(random.uniform(2, 8))
 
+        # If poster URL is empty, crop fanart to create poster
+        if not metadata.poster.url:
+            fanart_file = output_dir / f"{number}-fanart.jpg"
+            if fanart_file.exists():
+                print("Poster URL为空，尝试从fanart裁剪生成...")
+                self._crop_fanart_to_poster(output_dir, number)
+
         # Extra fanart screenshots
         if metadata.extrafanart:
             extra_dir = output_dir / "extrafanart"
@@ -296,6 +303,38 @@ class MediaProcessor:
             print(f"备用源下载失败: {e}")
             return 0
 
+    def _crop_fanart_to_poster(self, output_dir: Path, number: str) -> None:
+        """Crop fanart image to create poster.
+
+        Crop fanart image to use as poster when poster URL is not available.
+        Crops right half of image, limiting width to max 379px.
+
+        Args:
+            output_dir: Target directory
+            number: Movie number for filename
+        """
+        fanart_file = output_dir / f"{number}-fanart.jpg"
+
+        if not fanart_file.exists():
+            print(f"Fanart文件不存在，跳过裁剪: {fanart_file}")
+            return None
+
+        try:
+            with Image.open(fanart_file) as img:
+                width, height = img.size
+                if width > 700:
+                    # 修改后的裁剪逻辑：限制宽度为最大379px
+                    max_width = 379
+                    crop_width = min(width // 2, max_width)
+                    right_half = img.crop((width - crop_width, 0, width, height))
+                    poster_path = output_dir / f"{number}-poster.jpg"
+                    right_half.save(poster_path, quality=95)
+                    print(f"✓ 从fanart裁剪生成poster: {width}x{height} -> {crop_width}x{height}")
+                else:
+                    print(f"Fanart宽度不足700px ({width})，跳过裁剪")
+        except Exception as e:
+            print(f"裁剪fanart生成poster失败: {e}")
+
     def _generate_nfo(self, metadata: MovieMetadata, output_dir: Path, number: str) -> None:
         """Generate NFO file.
 
@@ -343,21 +382,11 @@ class MediaProcessor:
         if not poster_file.exists():
             # 检查fanart是否存在且宽度大于700px，如果满足则裁剪作为poster
             if fanart_file.exists():
-                try:
-                    with Image.open(fanart_file) as img:
-                        width, height = img.size
-                        if width > 700:
-                            # 修改后的裁剪逻辑：限制宽度为最大379px
-                            max_width = 379
-                            crop_width = min(width // 2, max_width)
-                            right_half = img.crop((width - crop_width, 0, width, height))
-                            poster_path = output_dir / f"{number}-poster.jpg"
-                            right_half.save(poster_path, quality=95)
-                            print(f"✓ 使生成poster: {width}x{height} -> {crop_width}x{height}")
-                        else:
-                            missing.append(f"{number}-poster.jpg")
-                except Exception as e:
-                    missing.append(f"{number}-poster.jpg (裁剪失败: {e})")
+                print("验证时poster不存在，尝试从fanart裁剪生成...")
+                self._crop_fanart_to_poster(output_dir, number)
+                # 再次检查
+                if not poster_file.exists():
+                    missing.append(f"{number}-poster.jpg (裁剪失败)")
             else:
                 missing.append(f"{number}-poster.jpg")
 
