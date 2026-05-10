@@ -18,9 +18,6 @@ from bs4 import BeautifulSoup
 
 from jcatch.scrapers.base import BaseScraper
 from jcatch.core.models import MovieMetadata, Actor, ImageUrl
-from jcatch.utils.logger import setup_logger
-
-logger = setup_logger(__name__)
 
 
 class JavTrailersScraper(BaseScraper):
@@ -57,15 +54,15 @@ class JavTrailersScraper(BaseScraper):
         chrome_path = self._get_chrome_path()
         if chrome_path:
             options.binary_location = chrome_path
-            logger.debug(f"Chrome 路径: {chrome_path}")
+            print(f"Chrome 路径: {chrome_path}")
 
         # Use provided chromedriver_path or install via webdriver-manager
         if self.chromedriver_path:
             service = Service(self.chromedriver_path)
-            logger.debug(f"使用指定 ChromeDriver: {self.chromedriver_path}")
+            print(f"使用指定 ChromeDriver: {self.chromedriver_path}")
         else:
             driver_path = ChromeDriverManager().install()
-            logger.debug(f"download driver at: {driver_path}")
+            print(f"download driver at: {driver_path}")
             service = Service(driver_path)
 
         driver = webdriver.Chrome(service=service, options=options)
@@ -73,7 +70,7 @@ class JavTrailersScraper(BaseScraper):
         # Print Chrome version info
         chrome_version = driver.capabilities.get('browserVersion', 'unknown')
         chromedriver_version = driver.capabilities.get('chrome', {}).get('chromedriverVersion', 'unknown').split(' ')[0]
-        logger.debug(f"Chrome 版本：{chrome_version}，ChromeDriver 版本：{chromedriver_version}")
+        print(f"Chrome 版本：{chrome_version}，ChromeDriver 版本：{chromedriver_version}")
         return driver
 
     def _get_chrome_path(self) -> str:
@@ -125,7 +122,7 @@ class JavTrailersScraper(BaseScraper):
             # Normalize number: uppercase
             number = number.upper()
 
-            logger.info(f"从 JavTrailers 获取 {number} 的信息...")
+            print(f"从 JavTrailers 获取 {number} 的信息...")
 
             # Navigate to homepage
             self.driver.get(self.BASE_URL)
@@ -173,7 +170,7 @@ class JavTrailersScraper(BaseScraper):
                     html = self.driver.page_source
                     soup = BeautifulSoup(html, "lxml")
             except Exception as e:
-                logger.debug(f"Gallery button not found or already active: {e}")
+                print(f"Gallery button not found or already active: {e}")
 
             # Parse metadata
             num = self._parse_num(soup, number)

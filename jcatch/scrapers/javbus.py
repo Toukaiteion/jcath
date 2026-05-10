@@ -18,9 +18,6 @@ from bs4 import BeautifulSoup
 
 from jcatch.scrapers.base import BaseScraper
 from jcatch.core.models import MovieMetadata, Actor, ImageUrl
-from jcatch.utils.logger import setup_logger
-
-logger = setup_logger(__name__)
 
 
 class JavBusScraper(BaseScraper):
@@ -57,15 +54,15 @@ class JavBusScraper(BaseScraper):
         chrome_path = self._get_chrome_path()
         if chrome_path:
             options.binary_location = chrome_path
-            logger.debug(f"Chrome 路径: {chrome_path}")
+            print(f"Chrome 路径: {chrome_path}")
 
         # Use provided chromedriver_path or install via webdriver-manager
         if self.chromedriver_path:
             service = Service(self.chromedriver_path)
-            logger.debug(f"使用指定 ChromeDriver: {self.chromedriver_path}")
+            print(f"使用指定 ChromeDriver: {self.chromedriver_path}")
         else:
             driver_path = ChromeDriverManager().install()
-            logger.debug(f"download driver at: {driver_path}")
+            print(f"download driver at: {driver_path}")
             service = Service(driver_path)
 
         driver = webdriver.Chrome(service=service, options=options)
@@ -73,7 +70,7 @@ class JavBusScraper(BaseScraper):
         # Print Chrome version info
         chrome_version = driver.capabilities.get('browserVersion', 'unknown')
         chromedriver_version = driver.capabilities.get('chrome', {}).get('chromedriverVersion', 'unknown').split(' ')[0]
-        logger.debug(f"Chrome 版本：{chrome_version}，ChromeDriver 版本：{chromedriver_version}")
+        print(f"Chrome 版本：{chrome_version}，ChromeDriver 版本：{chromedriver_version}")
         return driver
 
     def _get_chrome_path(self) -> str:
@@ -210,7 +207,7 @@ class JavBusScraper(BaseScraper):
             date_str = full_text.split(':')[1].strip()
             return date_str
         else:
-            logger.debug("未找到冒号分隔符")
+            print("未找到冒号分隔符")
             return ''
 
     def _parse_runtime(self, soup: BeautifulSoup) -> int:

@@ -5,9 +5,6 @@ import requests
 
 from jcatch.core.models import ImageUrl
 from jcatch.scrapers.base import BaseScraper
-from jcatch.utils.logger import setup_logger
-
-logger = setup_logger(__name__)
 
 
 class Www324JavScraper(BaseScraper):
@@ -29,7 +26,7 @@ class Www324JavScraper(BaseScraper):
             ImageUrl object with URL and empty headers
         """
         url = f"{self.BASE_URL}/{number.lower()}"
-        logger.debug(f"从 {url} 获取封面")
+        print(f"从 {url} 获取封面")
         try:
             response = requests.get(url, timeout=30)
             response.raise_for_status()
@@ -47,5 +44,5 @@ class Www324JavScraper(BaseScraper):
             return ImageUrl(url="")
 
         except Exception as e:
-            logger.error(f"Failed to get poster from www3.24-jav.com: {e}")
+            print(f"Failed to get poster from www3.24-jav.com: {e}")
             return ImageUrl(url="")

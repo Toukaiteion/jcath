@@ -2,9 +2,6 @@
 
 from jcatch.core.models import ImageUrl, MovieMetadata
 from jcatch.scrapers.decorators.base_decorator import ScraperDecorator
-from jcatch.utils.logger import setup_logger
-
-logger = setup_logger(__name__)
 
 
 class PosterDecorator(ScraperDecorator):
@@ -52,7 +49,7 @@ class PosterDecorator(ScraperDecorator):
 
         # If wrapped poster is empty or invalid, retry with own scraper
         if not wrapper_metadata.poster or not wrapper_metadata.poster.url:
-            logger.debug(f"{self.__class__.__name__} Poster 为空, 使用自己的搜刮器重试")
+            print(f"{self.__class__.__name__} Poster 为空, 使用自己的搜刮器重试")
             return self._call_poster_scraper(number)
 
         return wrapper_metadata.poster
@@ -72,5 +69,5 @@ class PosterDecorator(ScraperDecorator):
                 metadata = self.poster_scraper.fetch_metadata(number)
                 return metadata.poster
         except Exception as e:
-            logger.error(f"{self.__class__.__name__} Poster 搜刮器错误: {e}")
+            print(f"{self.__class__.__name__} Poster 搜刮器错误: {e}")
             return ImageUrl(url="")
